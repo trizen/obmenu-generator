@@ -1,0 +1,662 @@
+#!/usr/bin/perl
+
+# Copyright (C) 2011-2013 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Openbox Menu Generator
+# A fast pipe/static menu generator for the Openbox Window Manager.
+
+# Program: obmenu-generator
+# License: GPLv3
+# Created on: 25 March 2011
+# Latest edit on: 07 October 2013
+
+# Websites: http://trizen.googlecode.com
+#           http://trizenx.blogspot.com
+
+#use 5.014;
+#use strict;
+#use warnings;
+
+require Linux::DesktopFiles;
+
+$Linux::DesktopFiles::VERSION >= 0.08
+  || die "Update Linux::DesktopFiles to a newer version! (requires >=0.08)\n";
+
+my $pkgname = 'obmenu-generator';
+my $version = '0.58';
+
+our ($CONFIG, $SCHEMA);
+my $output_h = *STDOUT;
+
+my ($pipe, $static, $icons, $reconfigure, $stdout_config, $update_config);
+
+my $home_dir =
+     $ENV{HOME}
+  || $ENV{LOGDIR}
+  || (getpwuid($<))[7]
+  || `echo -n ~`;
+
+my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || "$home_dir/.config";
+
+my $menu_id      = "root-menu";
+my $config_dir   = "$xdg_config_home/obmenu-generator";
+my $schema_file  = "$config_dir/schema.pl";
+my $config_file  = "$config_dir/config.pl";
+my $openbox_conf = "$xdg_config_home/openbox";
+my $menufile     = "$openbox_conf/menu.xml";
+my $icons_db     = "$config_dir/icons.db";
+
+sub usage {
+    print <<"HELP";
+usage: $0 [options]
+
+Options:
+    -p  : (re)generate a pipe menu
+    -s  : (re)generate a static menu
+    -o  : static menu file (default: ~/.config/openbox/menu.xml)
+    -m  : menu id (default: 'root-menu')
+    -r  : regenerate the config files
+    -i  : use icons in menus
+    -d  : regenerate icons.db (with -i)
+    -u  : update the config file
+    -R  : reconfigure openbox
+
+Help:
+    -h  : print this message
+    -v  : print the version number
+    -S  : print the schema file to STDOUT
+    -H  : print help message for config files
+
+Examples:
+   ** Static menu without icons:
+        $0 -s
+
+   ** Pipe menu with icons:
+        $0 -p -i
+
+    ** Reconfigure openbox:
+        $0 -R
+
+** Config file: $config_file
+** Schema file: $schema_file
+HELP
+    exit 0;
+}
+
+my $config_help = <<"HELP";
+
+|| FILTERING
+    | skip_filename_re    : Skip a .desktop file if its name matches the regex.
+                            Name is from the last slash to the end. (filename.desktop)
+                            Example: qr/^(?:gimp|xterm)\\b/,    # skips 'gimp' and 'xterm'
+
+    | skip_entry          : Skip a destkop file if the value from a given key matches the regex.
+                            Example: [
+                                {key => 'Name', re => qr/(?:about|terminal)/i},
+                                {key => 'Exec', re => qr/^xterm/},
+                            ],
+
+    | substitutions       : Substitute, by using a regex, in the values of the desktop files.
+                            Example: [
+                                {key => 'Exec', re => qr/xterm/, value => 'sakura'},
+                                {key => 'Exec', re => qr/\\\\\\\\/,  value => '\\\\', global => 1},    # for wine apps
+                            ],
+
+
+|| ICON SETTINGS
+    | icon_dirs_first     : When looking for icons, look in this directories first,
+                            before looking in the directories of the current icon theme.
+                            Example: [
+                                "\$ENV{HOME}/My icons",
+                            ],
+
+    | icon_dirs_second    : Look in this directories after looked in the directories of the
+                            current icon theme. (Before /usr/share/pixmaps)
+                            Example: [
+                                "/usr/share/icons/gnome",
+                            ],
+
+    | icon_dirs_last      : Look in this directories at the very last, after looked in
+                            /usr/share/pixmaps, /usr/share/icons/hicolor and some other
+                            directories.
+                            Example: [
+                                "/usr/share/icons/Tango",
+                            ],
+
+    | strict_icon_dirs    : A true value will make the module to look only inside the directories
+                            specified by you in either one of the above three options.
+
+    | gtk_rc_filename     : Absolute path to the GTK configuration file.
+    | missing_image       : Use this icon for missing icons (default: gtk-missing-image)
+
+
+|| KEYS
+    | name_keys           : Valid keys for the item names.
+                            Example: ['Name[fr]', 'GenericName[fr]', 'Name'],   # french menu
+
+
+|| PATHS
+    | desktop_files_paths   : Absolute paths which contains .desktop files.
+                              Example: [
+                                '/usr/share/applications',
+                                "\$ENV{HOME}/.local/share/applications",
+                                glob("\$ENV{HOME}/.local/share/applications/wine/Programs/*"),
+                              ],
+
+
+|| NOTES
+    | Regular expressions:
+        * use qr/RE/ instead of 'RE'
+        * use qr/RE/i for case insenstive mode
+HELP
+
+my $schema_help = <<"HELP";
+
+item: add an item into the menu
+
+    {item => ["command", "label", "icon"]}
+
+
+cat: add a category into the menu
+
+    {cat => ["name", "label", "icon"]}
+
+
+begin_cat: begin of a category
+
+    {begin_cat => ["name", "icon"]}
+
+
+end_cat: end of a category
+
+    {end_cat => undef}
+
+
+sep: horizontal line separator
+
+    {sep => undef}
+    {sep => "label"}
+
+
+exit: default "Exit" action
+
+    {exit => ["label", "icon"]}
+
+
+pipe: a pipe menu entry
+
+    {pipe => ["command", "label", "icon"]}
+
+
+raw: any valid Openbox XML string
+
+    {raw => q(xml string)},
+
+
+obgenmenu: menu entry provided by $pkgname
+
+    {obgenmenu => ["label", "icon"]}
+HELP
+
+sub full_help {
+    print <<"HELP";
+=>> Schema file:
+$schema_help
+====================================================
+
+=>> Config file:
+$config_help
+HELP
+    exit 0;
+}
+
+if (@ARGV) {
+    while (defined(my $arg = shift @ARGV)) {
+        if ($arg eq '-i') {
+            $icons = 1;
+        }
+        elsif ($arg eq '-S') {
+            $stdout_config = 1;
+        }
+        elsif ($arg eq '-p') {
+            $pipe = 1;
+        }
+        elsif ($arg eq '-r') {
+            $reconfigure = 1;
+        }
+        elsif ($arg eq '-s') {
+            $static = 1;
+        }
+        elsif ($arg eq '-d') {
+            unlink $icons_db;
+        }
+        elsif ($arg eq '-u') {
+            $update_config = 1;
+        }
+        elsif ($arg eq '-v') {
+            print "$pkgname $version\n";
+            exit 0;
+        }
+        elsif ($arg eq '-R') {
+            exec 'openbox', '--reconfigure';
+        }
+        elsif ($arg eq '-o') {
+            $menufile = shift(@ARGV) // die "$0: option '-o' requires an argument!\n";
+        }
+        elsif ($arg eq '-m') {
+            $menu_id = shift(@ARGV) // die "$0: option '-m' requires an argument!\n";
+        }
+        elsif ($arg eq '-h') {
+            usage();
+        }
+        elsif ($arg eq '-H') {
+            full_help();
+        }
+    }
+}
+
+if (not -d $config_dir) {
+    require File::Path;
+    File::Path::make_path($config_dir)
+      or die "Can't create directory '${config_dir}': $!";
+}
+
+my $config_documentation = <<"EOD";
+#!/usr/bin/perl
+
+# $pkgname - configuration file
+# This file will be updated automatically every time when is needed.
+# Any additional comment and/or indentation will be lost.
+
+=for comment
+$config_help
+=cut
+
+EOD
+
+my %CONFIG = (
+    'Linux::DesktopFiles' => {
+
+        keep_unknown_categories => 1,
+        unknown_category_key    => 'other',
+        gtk_rc_filename         => "$home_dir/.gtkrc-2.0",
+
+        skip_entry       => undef,
+        substitutions    => undef,
+        skip_filename_re => undef,
+
+        terminalize            => 1,
+        terminalization_format => q{%s -e '%s'},
+
+        desktop_files_paths => ['/usr/share/applications'],
+
+        icon_dirs_first  => undef,
+        icon_dirs_second => undef,
+        icon_dirs_last   => undef,
+        strict_icon_dirs => undef,
+
+        skip_svg_icons => 1,
+    },
+
+    name_keys    => ['Name'],
+    terminal     => 'xterm',
+    editor       => 'geany',
+    missing_icon => 'gtk-missing-image',
+    VERSION      => $version,
+             );
+
+sub dump_configuration {
+    require Data::Dump;
+    open my $config_fh, '>', $config_file
+      or die "Can't open file '${config_file}' for write: $!";
+    my $dumped_config = q{our $CONFIG = } . Data::Dump::dump(\%CONFIG);
+    print $config_fh $config_documentation, $dumped_config;
+    close $config_fh;
+}
+
+if (not -e $config_file or $reconfigure) {
+    dump_configuration();
+}
+
+if (not -e $schema_file or $reconfigure or $stdout_config) {
+
+    my $schema_fh = $stdout_config ? \*STDOUT : do {
+        open my $fh, '>', $schema_file
+          or die "Can't open file '${schema_file}' for write: $!";
+        $fh;
+    };
+
+    print $schema_fh <<"SCHEMA_FILE";
+#!/usr/bin/perl
+
+# $pkgname - schema file
+
+=for comment
+$schema_help
+=cut
+
+# NOTE:
+#    * Keys and values are case sensitive. Keep all keys lowercase.
+#    * ICON can be a either a direct path to an icon or a valid icon name
+#    * Category names are case insensitive. (X-XFCE and x_xfce are equivalent)
+
+require '${config_file}';
+
+our \$SCHEMA = [
+    #          COMMAND             LABEL                ICON
+    {item => ['pcmanfm',       'File Manager',      'file-manager']},
+    {item => ['xterm',         'Terminal',          'terminal']},
+    {item => ['google-chrome', 'Web Browser',       'web-browser']},
+    {item => ['gmrun',         'Run command',       'system-run']},
+    {item => ['pidgin',        'Instant messaging', 'system-users']},
+
+    {sep => 'Applications'},
+
+    #          NAME            LABEL                ICON
+    {cat => ['utility',     'Accessories', 'applications-utilities']},
+    {cat => ['development', 'Development', 'applications-development']},
+    {cat => ['education',   'Education',   'applications-science']},
+    {cat => ['game',        'Games',       'applications-games']},
+    {cat => ['graphics',    'Graphics',    'applications-graphics']},
+    {cat => ['audiovideo',  'Multimedia',  'applications-multimedia']},
+    {cat => ['network',     'Network',     'applications-internet']},
+    {cat => ['office',      'Office',      'applications-office']},
+    {cat => ['other',       'Other',       'applications-other']},
+    {cat => ['settings',    'Settings',    'applications-accessories']},
+    {cat => ['system',      'System',      'applications-system']},
+
+    #{cat => ['qt',          'QT Applications',    'qtlogo']},
+    #{cat => ['gtk',         'GTK Applications',   'gnome-applications']},
+    #{cat => ['x_xfce',      'XFCE Applications',  'applications-other']},
+    #{cat => ['gnome',       'GNOME Applications', 'gnome-applications']},
+    #{cat => ['consoleonly', 'CLI Applications',   'applications-utilities']},
+
+    #                  LABEL          ICON
+    #{begin_cat => ['My category',  'cat-icon']},
+    #             ... some items ...
+    #{end_cat   => undef},
+
+    #            COMMAND     LABEL        ICON
+    #{pipe => ['obbrowser', 'Disk', 'drive-harddisk']},
+
+    {sep       => undef},
+    {obgenmenu => ['Openbox Settings', 'applications-engineering']},
+    {sep       => undef},
+
+    {item => ['xscreensaver-command -lock', 'Lock', 'lock']},
+
+    # This options uses the default Openbox's action "Exit"
+    {exit => ['Exit', 'exit']},
+]
+SCHEMA_FILE
+
+    exit if $stdout_config;
+    close $schema_fh;
+}
+
+require $schema_file;    # Load the configuration files
+
+# Remove user's defined values
+my @valid_keys = grep exists $CONFIG{$_}, keys $CONFIG;
+@CONFIG{@valid_keys} = @{$CONFIG}{@valid_keys};
+
+# Keep user's defined values
+#@CONFIG{keys %{$CONFIG}} = values %{$CONFIG};
+
+if ($CONFIG{VERSION} != $version) {
+    $update_config = 1;
+    $CONFIG{VERSION} = $version;
+}
+
+if ($icons && !$pipe) {
+
+    # Performance improvement
+    # XXX: don't do this in production code!
+    @INC{
+        qw(
+          strict.pm
+          warnings.pm
+          Tie/Hash.pm
+          Carp.pm
+          Exporter.pm
+          warnings/register.pm
+          )
+        } = ();
+
+    *{'warnings::warnif'} = sub { };
+}
+
+my $desk_obj = Linux::DesktopFiles->new(
+    %{$CONFIG{'Linux::DesktopFiles'}},
+
+    home_dir => $home_dir,
+
+    categories => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
+    keys_to_keep => [@{$CONFIG{name_keys}}, 'Exec', $icons ? 'Icon' : ()],
+
+    $icons
+    ? (
+       abs_icon_paths   => 1,
+       icon_db_filename => $icons_db,
+      )
+    : (),
+
+    terminal              => $CONFIG{terminal},
+    keep_empty_categories => 0,
+    case_insensitive_cats => 1,
+                                       );
+
+if ($pipe or $static) {
+    my $menu_backup = $menufile . '.bak';
+    if (not -e $menu_backup and -e $menufile) {
+        require File::Copy;
+        File::Copy::copy($menufile, $menu_backup);
+    }
+
+    if ($static) {
+        open $output_h, '>', $menufile
+          or die "Can't open file '${menufile}' for write: $!";
+    }
+    elsif ($pipe) {
+        if (not -d $openbox_conf) {
+            require File::Path;
+            File::Path::make_path($openbox_conf)
+              or die "Can't create directory '${openbox_conf}': $!";
+        }
+
+        require Cwd;
+        my $exec_name = Cwd::abs_path($0) . ($icons ? q{ -i} : q{});
+
+        if (not -x $exec_name) {
+            $exec_name = "$^X $exec_name";
+        }
+
+        open my $fh, '>', $menufile
+          or die "Can't open file '${menufile}' for write: $!";
+        print $fh <<"PIPE_MENU_HEADER";
+<?xml version="1.0" encoding="utf-8"?>
+<openbox_menu xmlns="http://openbox.org/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://openbox.org/">
+    <menu id="$menu_id" label="obmenu-generator" execute="$exec_name" />
+</openbox_menu>
+PIPE_MENU_HEADER
+        close $fh;
+
+        print <<'EOT';
+** The pipe menu has been successfully generated!
+EOT
+
+        exec 'openbox', '--reconfigure';
+    }
+}
+
+my $generated_menu = $static
+  ? <<"STATIC_MENU_HEADER"
+<?xml version="1.0" encoding="utf-8"?>
+<openbox_menu xmlns="http://openbox.org/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://openbox.org/">
+  <menu id="$menu_id" label="Applications">
+STATIC_MENU_HEADER
+  : "<openbox_pipe_menu>\n";
+
+sub check_icon {
+    defined($_[0]) && (chr ord($_[0]) eq '/') ? $_[0] : $desk_obj->get_icon_path($_[0])
+      || $desk_obj->get_icon_path($CONFIG{missing_icon});
+}
+
+sub prepare_item {
+    $icons
+      ? <<"ITEM_WITH_ICON"
+    <item label="$_[1]" icon="${\check_icon($_[2])}"><action name="Execute"><execute>$_[0]</execute></action></item>
+ITEM_WITH_ICON
+      : <<"ITEM";
+    <item label="$_[1]"><action name="Execute"><execute>$_[0]</execute></action></item>
+ITEM
+}
+
+sub begin_category {
+    $icons
+      ? <<"MENU_WITH_ICON"
+  <menu id="$_[0]" icon="${\check_icon($_[1])}" label="$_[0]">
+MENU_WITH_ICON
+      : <<"MENU"
+  <menu id="$_[0]" label="$_[0]">
+MENU
+}
+
+my $categories = $desk_obj->parse_desktop_files();
+
+foreach my $schema (@$SCHEMA) {
+    if (exists $schema->{cat}) {
+        exists($categories->{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
+        $generated_menu .= begin_category($schema->{cat}[1], ($icons ? $schema->{cat}[2] : ())) . join(
+            q{},
+            (
+             map $_->[1],
+             sort { $a->[0] cmp $b->[0] }
+               map [lc($_) => $_],
+             map {
+
+                 my $name;
+                 my $exec = $_->{Exec};
+
+                 foreach my $key (@{$CONFIG{name_keys}}) {
+                     if (defined $_->{$key}) {
+                         $name = $_->{$key};
+                         last;
+                     }
+                 }
+
+                 foreach my $item ($name, $exec) {
+                     if ($item =~ tr/"&//) {
+                         $item =~ s/&/&amp;/g;
+                         $item =~ s/"/&quot;/g;
+                     }
+                 }
+
+                 $icons
+                   ? <<"ITEM_WITH_ICON"
+    <item label="$name" icon="${\check_icon($_->{Icon})}"><action name="Execute"><execute>$exec</execute></action></item>
+ITEM_WITH_ICON
+                   : <<"ITEM";
+    <item label="$name"><action name="Execute"><execute>$exec</execute></action></item>
+ITEM
+               } @{$categories->{$category}}
+            )
+          )
+          . qq[  </menu>\n];
+    }
+    elsif (exists $schema->{item}) {
+        $generated_menu .= prepare_item(@{$schema->{item}});
+    }
+    elsif (exists $schema->{sep}) {
+        $generated_menu .=
+          defined $schema->{sep}
+          ? qq[  <separator label="$schema->{sep}"/>\n]
+          : qq[  <separator/>\n];
+    }
+    elsif (exists $schema->{begin_cat}) {
+        $generated_menu .= begin_category(@{$schema->{begin_cat}});
+    }
+    elsif (exists $schema->{end_cat}) {
+        $generated_menu .= qq[  </menu>\n];
+    }
+    elsif (exists $schema->{exit}) {
+        my ($label, $icon) = @{$schema->{exit}};
+        $generated_menu .= $icons
+          ? <<"EXIT_WITH_ICON"
+    <item label="$label" icon="${\check_icon($icon)}"><action name="Exit"/></item>
+EXIT_WITH_ICON
+          : <<"EXIT";
+    <item label="$label"><action name="Exit"/></item>
+EXIT
+    }
+    elsif (exists $schema->{raw}) {
+        $generated_menu .= qq[    $schema->{raw}\n];
+    }
+    elsif (exists $schema->{pipe}) {
+        my ($command, $label, $icon) = @{$schema->{pipe}};
+        $generated_menu .= $icons
+          ? <<"PIPE_WITH_ICON"
+    <menu id="$label" label="$label" execute="$command" icon="${\check_icon($icon)}"/>
+PIPE_WITH_ICON
+          : <<"PIPE";
+    <menu id="$label" label="$label" execute="$command"/>
+PIPE
+    }
+    elsif (exists $schema->{obgenmenu}) {
+        my ($name, $icon) = ref($schema->{obgenmenu}) eq 'ARRAY' ? @{$schema->{obgenmenu}} : $schema->{obgenmenu};
+        $generated_menu .= ($icons ? <<"CONFIG_MENU_WITH_ICON" : <<"CONFIG_MENU") . <<'RECONFIGURE';
+  <menu id="$name" label="$name" icon="${\check_icon($icon)}">
+CONFIG_MENU_WITH_ICON
+  <menu id="$name" label="$name">
+CONFIG_MENU
+    <item label="Reconfigure Openbox"><action name="Reconfigure" /></item>
+RECONFIGURE
+
+        -e '/usr/bin/obconf' && ($generated_menu .= <<'EOL');
+    <item label="Openbox Configuration Manager"><action name="Execute"><execute>obconf</execute></action></item>
+EOL
+
+        $generated_menu .= <<"CONFIG_MENU";
+    <item label="Configure autostarted apps"><action name="Execute"><execute>$CONFIG{editor} $openbox_conf/autostart</execute></action></item>
+    <item label="Edit rc.xml"><action name="Execute"><execute>$CONFIG{editor} $openbox_conf/rc.xml</execute></action></item>
+    <separator />
+    <item label="Generate a pipe menu"><action name="Execute"><execute>$0 -p</execute></action></item>
+    <item label="Generate a static menu"><action name="Execute"><execute>$0 -s</execute></action></item>
+    <item label="Generate a pipe menu with icons"><action name="Execute"><execute>$0 -p -i</execute></action></item>
+    <item label="Generate a static menu with icons"><action name="Execute"><execute>$0 -s -i</execute></action></item>
+    <separator />
+    <item label="Edit menu.xml"><action name="Execute"><execute>$CONFIG{editor} $menufile</execute></action></item>
+    <item label="Edit the schema file"><action name="Execute"><execute>$CONFIG{editor} $schema_file</execute></action></item>
+    <item label="Edit the configuration file"><action name="Execute"><execute>$CONFIG{editor} $config_file</execute></action></item>
+    <separator />
+    <item label="Regenerate configuration file"><action name="Execute"><execute>$0 -r</execute></action></item>
+  </menu>
+CONFIG_MENU
+    }
+    else {
+        warn "$0: Invalid key '", (keys %{$schema})[0], "' in schema file!\n";
+    }
+}
+
+print $output_h $generated_menu, $static
+  ? qq[  </menu>\n</openbox_menu>\n]
+  : qq[</openbox_pipe_menu>\n];
+
+dump_configuration() if $update_config;
