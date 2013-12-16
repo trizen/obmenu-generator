@@ -36,7 +36,7 @@ $Linux::DesktopFiles::VERSION >= 0.08
   || die "Update Linux::DesktopFiles to a newer version! (requires >=0.08)\n";
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.58';
+my $version = '0.59-git';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = *STDOUT;
@@ -49,7 +49,7 @@ my $home_dir =
   || (getpwuid($<))[7]
   || `echo -n ~`;
 
-my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || "$home_dir/.config";
+my $xdg_config_home = "$home_dir/.config";
 
 my $menu_id      = "root-menu";
 my $config_dir   = "$xdg_config_home/obmenu-generator";
@@ -77,8 +77,6 @@ Options:
 Help:
     -h  : print this message
     -v  : print the version number
-    -S  : print the schema file to STDOUT
-    -H  : print help message for config files
 
 Examples:
    ** Static menu without icons:
@@ -163,66 +161,6 @@ my $config_help = <<"HELP";
         * use qr/RE/i for case insenstive mode
 HELP
 
-my $schema_help = <<"HELP";
-
-item: add an item into the menu
-
-    {item => ["command", "label", "icon"]}
-
-
-cat: add a category into the menu
-
-    {cat => ["name", "label", "icon"]}
-
-
-begin_cat: begin of a category
-
-    {begin_cat => ["name", "icon"]}
-
-
-end_cat: end of a category
-
-    {end_cat => undef}
-
-
-sep: horizontal line separator
-
-    {sep => undef}
-    {sep => "label"}
-
-
-exit: default "Exit" action
-
-    {exit => ["label", "icon"]}
-
-
-pipe: a pipe menu entry
-
-    {pipe => ["command", "label", "icon"]}
-
-
-raw: any valid Openbox XML string
-
-    {raw => q(xml string)},
-
-
-obgenmenu: menu entry provided by $pkgname
-
-    {obgenmenu => ["label", "icon"]}
-HELP
-
-sub full_help {
-    print <<"HELP";
-=>> Schema file:
-$schema_help
-====================================================
-
-=>> Config file:
-$config_help
-HELP
-    exit 0;
-}
-
 if (@ARGV) {
     while (defined(my $arg = shift @ARGV)) {
         if ($arg eq '-i') {
@@ -262,8 +200,8 @@ if (@ARGV) {
         elsif ($arg eq '-h') {
             usage();
         }
-        elsif ($arg eq '-H') {
-            full_help();
+        else {
+            die "$0: option `$arg' is invalid!\n";
         }
     }
 }
@@ -331,80 +269,8 @@ if (not -e $config_file or $reconfigure) {
     dump_configuration();
 }
 
-if (not -e $schema_file or $reconfigure or $stdout_config) {
-
-    my $schema_fh = $stdout_config ? \*STDOUT : do {
-        open my $fh, '>', $schema_file
-          or die "Can't open file '${schema_file}' for write: $!";
-        $fh;
-    };
-
-    print $schema_fh <<"SCHEMA_FILE";
-#!/usr/bin/perl
-
-# $pkgname - schema file
-
-=for comment
-$schema_help
-=cut
-
-# NOTE:
-#    * Keys and values are case sensitive. Keep all keys lowercase.
-#    * ICON can be a either a direct path to an icon or a valid icon name
-#    * Category names are case insensitive. (X-XFCE and x_xfce are equivalent)
-
-require '${config_file}';
-
-our \$SCHEMA = [
-    #          COMMAND             LABEL                ICON
-    {item => ['pcmanfm',       'File Manager',      'file-manager']},
-    {item => ['xterm',         'Terminal',          'terminal']},
-    {item => ['google-chrome', 'Web Browser',       'web-browser']},
-    {item => ['gmrun',         'Run command',       'system-run']},
-    {item => ['pidgin',        'Instant messaging', 'system-users']},
-
-    {sep => 'Applications'},
-
-    #          NAME            LABEL                ICON
-    {cat => ['utility',     'Accessories', 'applications-utilities']},
-    {cat => ['development', 'Development', 'applications-development']},
-    {cat => ['education',   'Education',   'applications-science']},
-    {cat => ['game',        'Games',       'applications-games']},
-    {cat => ['graphics',    'Graphics',    'applications-graphics']},
-    {cat => ['audiovideo',  'Multimedia',  'applications-multimedia']},
-    {cat => ['network',     'Network',     'applications-internet']},
-    {cat => ['office',      'Office',      'applications-office']},
-    {cat => ['other',       'Other',       'applications-other']},
-    {cat => ['settings',    'Settings',    'applications-accessories']},
-    {cat => ['system',      'System',      'applications-system']},
-
-    #{cat => ['qt',          'QT Applications',    'qtlogo']},
-    #{cat => ['gtk',         'GTK Applications',   'gnome-applications']},
-    #{cat => ['x_xfce',      'XFCE Applications',  'applications-other']},
-    #{cat => ['gnome',       'GNOME Applications', 'gnome-applications']},
-    #{cat => ['consoleonly', 'CLI Applications',   'applications-utilities']},
-
-    #                  LABEL          ICON
-    #{begin_cat => ['My category',  'cat-icon']},
-    #             ... some items ...
-    #{end_cat   => undef},
-
-    #            COMMAND     LABEL        ICON
-    #{pipe => ['obbrowser', 'Disk', 'drive-harddisk']},
-
-    {sep       => undef},
-    {obgenmenu => ['Openbox Settings', 'applications-engineering']},
-    {sep       => undef},
-
-    {item => ['xscreensaver-command -lock', 'Lock', 'lock']},
-
-    # This options uses the default Openbox's action "Exit"
-    {exit => ['Exit', 'exit']},
-]
-SCHEMA_FILE
-
-    exit if $stdout_config;
-    close $schema_fh;
+if (not -e $schema_file) {
+    die "$0: schema file `$schema_file' does not exists!\n";
 }
 
 require $schema_file;    # Load the configuration files
