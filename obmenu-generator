@@ -36,7 +36,7 @@ $Linux::DesktopFiles::VERSION >= 0.08
   || die "Update Linux::DesktopFiles to a newer version! (requires >=0.08)\n";
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.59';
+my $version = 0.59;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = *STDOUT;
