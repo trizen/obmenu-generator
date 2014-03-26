@@ -21,15 +21,15 @@ Options:
 
 
 Generating a simple static menu:
-   
+
     obmenu-generator -s
 
 Generating a pipe menu with icons:
-   
+
     obmenu-generator -p -i
 
 Reconfiguring openbox:
-   
+
     obmenu-generator -R
 
 * <b>Config file:</b> ~/.config/obmenu-generator/config.pl

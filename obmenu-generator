@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2011-2013 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+# Copyright (C) 2011-2014 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 07 October 2013
+# Latest edit on: 26 March 2014
 
 # Websites: http://trizen.googlecode.com
 #           http://trizenx.blogspot.com
@@ -36,7 +36,7 @@ $Linux::DesktopFiles::VERSION >= 0.08
   || die "Update Linux::DesktopFiles to a newer version! (requires >=0.08)\n";
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.59-git';
+my $version = '0.59';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = *STDOUT;
@@ -52,7 +52,7 @@ my $home_dir =
 my $xdg_config_home = "$home_dir/.config";
 
 my $menu_id      = "root-menu";
-my $config_dir   = "$xdg_config_home/obmenu-generator";
+my $config_dir   = "$xdg_config_home/$pkgname";
 my $schema_file  = "$config_dir/schema.pl";
 my $config_file  = "$config_dir/config.pl";
 my $openbox_conf = "$xdg_config_home/openbox";
@@ -270,7 +270,14 @@ if (not -e $config_file or $reconfigure) {
 }
 
 if (not -e $schema_file) {
-    die "$0: schema file `$schema_file' does not exists!\n";
+    if (-e (my $etc_schema_file = "/etc/xdg/$pkgname/schema.pl")) {
+        require File::Copy;
+        File::Copy::copy($etc_schema_file, $schema_file)
+          or die "$0: can't copy file `$etc_schema_file' to `$schema_file': $!\n";
+    }
+    else {
+        die "$0: schema file `$schema_file' does not exists!\n";
+    }
 }
 
 require $schema_file;    # Load the configuration files
@@ -357,7 +364,7 @@ if ($pipe or $static) {
 <openbox_menu xmlns="http://openbox.org/"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://openbox.org/">
-    <menu id="$menu_id" label="obmenu-generator" execute="$exec_name" />
+    <menu id="$menu_id" label="$pkgname" execute="$exec_name" />
 </openbox_menu>
 PIPE_MENU_HEADER
         close $fh;
@@ -380,9 +387,14 @@ my $generated_menu = $static
 STATIC_MENU_HEADER
   : "<openbox_pipe_menu>\n";
 
-sub check_icon {
-    defined($_[0]) && (chr ord($_[0]) eq '/') ? $_[0] : $desk_obj->get_icon_path($_[0])
-      || $desk_obj->get_icon_path($CONFIG{missing_icon});
+{
+    my %cache;
+
+    sub check_icon {
+        $_[0] // return '';
+        $cache{$_[0]} //= ((chr ord($_[0]) eq '/') ? $_[0] : $desk_obj->get_icon_path($_[0])
+                           || $desk_obj->get_icon_path($CONFIG{missing_icon}));
+    }
 }
 
 sub prepare_item {
