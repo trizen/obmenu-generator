@@ -21,7 +21,7 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 26 March 2014
+# Latest edit on: 27 March 2014
 
 # Websites: http://trizen.googlecode.com
 #           http://trizenx.blogspot.com
@@ -41,7 +41,7 @@ my $version = 0.59;
 our ($CONFIG, $SCHEMA);
 my $output_h = *STDOUT;
 
-my ($pipe, $static, $icons, $reconfigure, $stdout_config, $update_config);
+my ($pipe, $static, $icons, $reconfigure, $update_config);
 
 my $home_dir =
      $ENV{HOME}
@@ -68,7 +68,7 @@ Options:
     -s  : (re)generate a static menu
     -o  : static menu file (default: ~/.config/openbox/menu.xml)
     -m  : menu id (default: 'root-menu')
-    -r  : regenerate the config files
+    -r  : regenerate the config file
     -i  : use icons in menus
     -d  : regenerate icons.db (with -i)
     -u  : update the config file
@@ -165,9 +165,6 @@ if (@ARGV) {
     while (defined(my $arg = shift @ARGV)) {
         if ($arg eq '-i') {
             $icons = 1;
-        }
-        elsif ($arg eq '-S') {
-            $stdout_config = 1;
         }
         elsif ($arg eq '-p') {
             $pipe = 1;
