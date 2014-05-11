@@ -22,9 +22,7 @@
 # License: GPLv3
 # Created on: 25 March 2011
 # Latest edit on: 27 March 2014
-
-# Websites: http://trizen.googlecode.com
-#           http://trizenx.blogspot.com
+# Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
 #use strict;
