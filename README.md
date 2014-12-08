@@ -13,6 +13,7 @@ Options:
     -s  : (re)generate a static menu
     -o  : static menu file (default: ~/.config/openbox/menu.xml)
     -m  : menu id (default: 'root-menu')
+    -t  : menu label text (default: "Applications")
     -r  : regenerate the config files
     -i  : use icons in menus
     -d  : regenerate icons.db (with -i)

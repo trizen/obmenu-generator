@@ -22,6 +22,7 @@
 # License: GPLv3
 # Created on: 25 March 2011
 # Latest edit on: 27 March 2014
+# Latest edit on: 07 December 2014  Bob Currey added cmd line option -t "Menu Label Text" with default of "Applications"
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
@@ -49,13 +50,14 @@ my $home_dir =
 
 my $xdg_config_home = "$home_dir/.config";
 
-my $menu_id      = "root-menu";
-my $config_dir   = "$xdg_config_home/$pkgname";
-my $schema_file  = "$config_dir/schema.pl";
-my $config_file  = "$config_dir/config.pl";
-my $openbox_conf = "$xdg_config_home/openbox";
-my $menufile     = "$openbox_conf/menu.xml";
-my $icons_db     = "$config_dir/icons.db";
+my $menu_id         = "root-menu";
+my $menu_label_text = "Applications";
+my $config_dir      = "$xdg_config_home/$pkgname";
+my $schema_file     = "$config_dir/schema.pl";
+my $config_file     = "$config_dir/config.pl";
+my $openbox_conf    = "$xdg_config_home/openbox";
+my $menufile        = "$openbox_conf/menu.xml";
+my $icons_db        = "$config_dir/icons.db";
 
 sub usage {
     print <<"HELP";
@@ -66,6 +68,7 @@ Options:
     -s  : (re)generate a static menu
     -o  : static menu file (default: ~/.config/openbox/menu.xml)
     -m  : menu id (default: 'root-menu')
+    -t  : menu label text (default: "Applications")
     -r  : regenerate the config file
     -i  : use icons in menus
     -d  : regenerate icons.db (with -i)
@@ -191,6 +194,9 @@ if (@ARGV) {
         }
         elsif ($arg eq '-m') {
             $menu_id = shift(@ARGV) // die "$0: option '-m' requires an argument!\n";
+        }
+        elsif ($arg eq '-t') {
+            $menu_label_text = shift(@ARGV) // die "$0: option '-t' requires an argument!\n";
         }
         elsif ($arg eq '-h') {
             usage();
@@ -378,7 +384,7 @@ my $generated_menu = $static
 <openbox_menu xmlns="http://openbox.org/"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://openbox.org/">
-  <menu id="$menu_id" label="Applications">
+  <menu id="$menu_id" label="$menu_label_text">
 STATIC_MENU_HEADER
   : "<openbox_pipe_menu>\n";
 
