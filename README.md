@@ -31,5 +31,5 @@ Examples:
    ** Dynamic menu with icons:
         obmenu-generator -p -i
 ```
-* <b>Config file:</b> ~/.config/obmenu-generator/config.pl
-* <b>Schema file:</b> ~/.config/obmenu-generator/schema.pl
+* <b>Config file:</b> `~/.config/obmenu-generator/config.pl`
+* <b>Schema file:</b> `~/.config/obmenu-generator/schema.pl`
