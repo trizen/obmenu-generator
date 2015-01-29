@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2011-2014 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+# Copyright (C) 2011-2015 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,11 +18,13 @@
 # Openbox Menu Generator
 # A fast pipe/static menu generator for the Openbox Window Manager.
 
+# Edited on 07 December 2014 by Bob Currey
+#   added cmd line option -t "Menu Label Text" with default of "Applications"
+
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 27 March 2014
-# Latest edit on: 07 December 2014  Bob Currey added cmd line option -t "Menu Label Text" with default of "Applications"
+# Latest edit on: 29 January 2015
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
@@ -31,16 +33,16 @@
 
 require Linux::DesktopFiles;
 
-$Linux::DesktopFiles::VERSION >= 0.08
-  || die "Update Linux::DesktopFiles to a newer version! (requires >=0.08)\n";
+$Linux::DesktopFiles::VERSION >= 0.09
+  || die "Update Linux::DesktopFiles to a newer version! (requires >=0.09)\n";
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.60;
+my $version = 0.61;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = *STDOUT;
 
-my ($pipe, $static, $icons, $reconfigure, $update_config);
+my ($pipe, $static, $icons, $reconfigure, $update_config, $reconf_openbox);
 
 my $home_dir =
      $ENV{HOME}
@@ -58,6 +60,7 @@ my $config_file     = "$config_dir/config.pl";
 my $openbox_conf    = "$xdg_config_home/openbox";
 my $menufile        = "$openbox_conf/menu.xml";
 my $icons_db        = "$config_dir/icons.db";
+my $cache_db        = "$config_dir/cache.db";
 
 sub usage {
     print <<"HELP";
@@ -73,7 +76,8 @@ Options:
     -i  : use icons in menus
     -d  : regenerate icons.db (with -i)
     -u  : update the config file
-    -R  : reconfigure openbox
+    -c  : reconfigure openbox automatically
+    -R  : reconfigure openbox now and exit
 
 Help:
     -h  : print this message
@@ -81,13 +85,10 @@ Help:
 
 Examples:
    ** Static menu without icons:
-        $0 -s
+        $0 -s -c
 
-   ** Pipe menu with icons:
+   ** Dynamic menu with icons:
         $0 -p -i
-
-    ** Reconfigure openbox:
-        $0 -R
 
 ** Config file: $config_file
 ** Schema file: $schema_file
@@ -186,6 +187,9 @@ if (@ARGV) {
             print "$pkgname $version\n";
             exit 0;
         }
+        elsif ($arg eq '-c') {
+            $reconf_openbox = 1;
+        }
         elsif ($arg eq '-R') {
             exec 'openbox', '--reconfigure';
         }
@@ -217,7 +221,7 @@ my $config_documentation = <<"EOD";
 #!/usr/bin/perl
 
 # $pkgname - configuration file
-# This file will be updated automatically every time when is needed.
+# This file will be updated automatically.
 # Any additional comment and/or indentation will be lost.
 
 =for comment
@@ -295,7 +299,7 @@ if ($CONFIG{VERSION} != $version) {
     $CONFIG{VERSION} = $version;
 }
 
-if ($icons && !$pipe) {
+if (!$pipe) {
 
     # Performance improvement
     # XXX: don't do this in production code!
@@ -310,7 +314,31 @@ if ($icons && !$pipe) {
           )
         } = ();
 
-    *{'warnings::warnif'} = sub { };
+    *warnings::warnif = sub { };
+}
+
+# Regenerate the cache db if the config file has been modified
+if ((-M $cache_db) > (-M $config_file)) {
+    print STDERR "** Regenerating the cache DB...\n";
+    unlink $cache_db;
+}
+
+require GDBM_File;
+tie my %desktop_file, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
+
+{    # Regerate the icon db if the gtkrc file has been modified
+    my $gtkrc_mtime = (stat $CONFIG{'Linux::DesktopFiles'}{gtk_rc_filename})[9];
+
+    if (exists $desktop_file{__GTKRC_MTIME__}) {
+        if ($desktop_file{__GTKRC_MTIME__} != $gtkrc_mtime) {
+            print STDERR "** Regenerating the icons DB...\n";
+            unlink $icons_db;
+            $desktop_file{__GTKRC_MTIME__} = $gtkrc_mtime;
+        }
+    }
+    else {
+        $desktop_file{__GTKRC_MTIME__} = $gtkrc_mtime;
+    }
 }
 
 my $desk_obj = Linux::DesktopFiles->new(
@@ -318,8 +346,8 @@ my $desk_obj = Linux::DesktopFiles->new(
 
     home_dir => $home_dir,
 
-    categories => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
-    keys_to_keep => [@{$CONFIG{name_keys}}, 'Exec', $icons ? 'Icon' : ()],
+    categories   => [map $_->{cat}[0],      grep exists $_->{cat}, @$SCHEMA],
+    keys_to_keep => [@{$CONFIG{name_keys}}, 'Exec',                'Icon'],
 
     $icons
     ? (
@@ -370,8 +398,8 @@ if ($pipe or $static) {
 PIPE_MENU_HEADER
         close $fh;
 
-        print <<'EOT';
-** The pipe menu has been successfully generated!
+        print STDERR <<'EOT';
+** A dynamic menu has been successfully generated!
 EOT
 
         exec 'openbox', '--reconfigure';
@@ -418,11 +446,39 @@ MENU_WITH_ICON
 MENU
 }
 
-my $categories = $desk_obj->parse_desktop_files();
+my %categories;
+foreach my $file ($desk_obj->get_desktop_files) {
+
+    my %info;
+    if (exists $desktop_file{$file}) {
+        %info = split("\0\1\0", $desktop_file{$file}, -1);
+    }
+
+    next if exists $info{__IGNORE__};
+
+    my $mtime = (stat $file)[9];
+    my $cache_ok = (%info and $info{__MTIME__} == $mtime);
+
+    if (not $cache_ok) {
+        $desk_obj->parse(\my %cats, $file);
+
+        my $fields = %cats ? (values %cats)[0][0] : {__IGNORE__ => 1};
+        %info = (%{$fields}, __MTIME__ => $mtime);
+
+        $info{__CATEGORIES__} = join(';', keys %cats);
+        $desktop_file{$file} = join("\0\1\0", %info);
+
+        next if exists $info{__IGNORE__};
+    }
+
+    foreach my $category (split(/;/, $info{__CATEGORIES__})) {
+        push @{$categories{$category}}, \%info;
+    }
+}
 
 foreach my $schema (@$SCHEMA) {
     if (exists $schema->{cat}) {
-        exists($categories->{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
+        exists($categories{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
         $generated_menu .= begin_category($schema->{cat}[1], ($icons ? $schema->{cat}[2] : ())) . join(
             q{},
             (
@@ -455,7 +511,7 @@ ITEM_WITH_ICON
                    : <<"ITEM";
     <item label="$name"><action name="Execute"><execute>$exec</execute></action></item>
 ITEM
-               } @{$categories->{$category}}
+               } @{$categories{$category}}
             )
           )
           . qq[  </menu>\n];
@@ -539,3 +595,12 @@ print $output_h $generated_menu, $static
   : qq[</openbox_pipe_menu>\n];
 
 dump_configuration() if $update_config;
+
+if ($static) {
+    print STDERR <<'EOT';
+** A static menu has been successfully generated!
+EOT
+    if ($reconf_openbox) {
+        exec 'openbox', '--reconfigure';
+    }
+}

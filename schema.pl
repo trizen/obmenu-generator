@@ -49,7 +49,7 @@ our $SCHEMA = [
     {cat => ['settings',    'Settings',    'applications-accessories']},
     {cat => ['system',      'System',      'applications-system']},
 
-    #{cat => ['qt',          'QT Applications',    'qtlogo']},
+    #{cat => ['qt',          'QT Applications',    'qt4logo']},
     #{cat => ['gtk',         'GTK Applications',   'gnome-applications']},
     #{cat => ['x_xfce',      'XFCE Applications',  'applications-other']},
     #{cat => ['gnome',       'GNOME Applications', 'gnome-applications']},
@@ -65,7 +65,7 @@ our $SCHEMA = [
 
     ## Generic advanced settings
     #{sep       => undef},
-    #{obgenmenu => ['Openbox Settings', 'applications-engineering']},
+    #{obgenmenu => ['Openbox Settings', 'openbox']},
     #{sep       => undef},
 
     ## Custom advanced settings
