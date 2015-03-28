@@ -24,7 +24,7 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 29 January 2015
+# Latest edit on: 29 March 2015
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
@@ -317,8 +317,8 @@ if (!$pipe) {
     *warnings::warnif = sub { };
 }
 
-# Regenerate the cache db if the config file has been modified
-if ((-M $cache_db) > (-M $config_file)) {
+# Regenerate the cache db if the config or schema file has been modified
+if ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file)) {
     print STDERR "** Regenerating the cache DB...\n";
     unlink $cache_db;
 }
