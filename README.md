@@ -7,22 +7,26 @@ A fast pipe/static menu generator for the Openbox Window Manager, with support f
 ```
 usage: obmenu-generator [options]
 
-Options:
-    -p  : (re)generate a pipe menu
-    -s  : (re)generate a static menu
-    -o  : static menu file (default: ~/.config/openbox/menu.xml)
-    -m  : menu id (default: 'root-menu')
-    -t  : menu label text (default: "Applications")
-    -r  : regenerate the config file
-    -i  : use icons in menus
-    -d  : regenerate icons.db (with -i)
-    -u  : update the config file
-    -c  : reconfigure openbox automatically
-    -R  : reconfigure openbox now and exit
+options:
+    -p         : (re)generate a pipe menu
+    -s         : (re)generate a static menu
+    -i         : include icons in menus
+    -m <id>    : menu id (default: 'root-menu')
+    -t <label> : menu label text (default: 'Applications')
+
+other:
+    -S <file>  : path to the schema.pl file
+    -C <file>  : path to the config.pl file
+    -o <file>  : path to the menu.xml file
+    -u         : update the config file
+    -r         : regenerate the config file
+    -d         : regenerate icons.db
+    -c         : reconfigure openbox automatically
+    -R         : reconfigure openbox and exit
 
 Help:
-    -h  : print this message
-    -v  : print the version number
+    -h  : print this message and exit
+    -v  : print version and exit
 
 Examples:
    ** Static menu without icons:

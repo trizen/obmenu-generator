@@ -24,7 +24,7 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 29 March 2015
+# Latest edit on: 02 April 2015
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
@@ -37,7 +37,7 @@ $Linux::DesktopFiles::VERSION >= 0.09
   || die "Update Linux::DesktopFiles to a newer version! (requires >=0.09)\n";
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.62;
+my $version = 0.63;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = *STDOUT;
@@ -66,22 +66,26 @@ sub usage {
     print <<"HELP";
 usage: $0 [options]
 
-Options:
-    -p  : (re)generate a pipe menu
-    -s  : (re)generate a static menu
-    -o  : static menu file (default: ~/.config/openbox/menu.xml)
-    -m  : menu id (default: 'root-menu')
-    -t  : menu label text (default: "Applications")
-    -r  : regenerate the config file
-    -i  : use icons in menus
-    -d  : regenerate icons.db (with -i)
-    -u  : update the config file
-    -c  : reconfigure openbox automatically
-    -R  : reconfigure openbox now and exit
+options:
+    -p         : (re)generate a pipe menu
+    -s         : (re)generate a static menu
+    -i         : include icons in menus
+    -m <id>    : menu id (default: 'root-menu')
+    -t <label> : menu label text (default: 'Applications')
+
+other:
+    -S <file>  : path to the schema.pl file
+    -C <file>  : path to the config.pl file
+    -o <file>  : path to the menu.xml file
+    -u         : update the config file
+    -r         : regenerate the config file
+    -d         : regenerate icons.db
+    -c         : reconfigure openbox automatically
+    -R         : reconfigure openbox and exit
 
 Help:
-    -h  : print this message
-    -v  : print the version number
+    -h  : print this message and exit
+    -v  : print version and exit
 
 Examples:
    ** Static menu without icons:
@@ -192,6 +196,12 @@ if (@ARGV) {
         }
         elsif ($arg eq '-R') {
             exec 'openbox', '--reconfigure';
+        }
+        elsif ($arg eq '-S') {
+            $schema_file = shift(@ARGV) // die "$0: option '-S' requires an argument!\n";
+        }
+        elsif ($arg eq '-C') {
+            $config_file = shift(@ARGV) // die "$0: options '-C' requires an argument!\n";
         }
         elsif ($arg eq '-o') {
             $menufile = shift(@ARGV) // die "$0: option '-o' requires an argument!\n";
@@ -426,16 +436,6 @@ STATIC_MENU_HEADER
     }
 }
 
-sub prepare_item {
-    $icons
-      ? <<"ITEM_WITH_ICON"
-    <item label="$_[1]" icon="${\check_icon($_[2])}"><action name="Execute"><execute>$_[0]</execute></action></item>
-ITEM_WITH_ICON
-      : <<"ITEM";
-    <item label="$_[1]"><action name="Execute"><execute>$_[0]</execute></action></item>
-ITEM
-}
-
 sub begin_category {
     $icons
       ? <<"MENU_WITH_ICON"
@@ -491,7 +491,7 @@ foreach my $schema (@$SCHEMA) {
                  my $exec = $_->{Exec};
 
                  foreach my $key (@{$CONFIG{name_keys}}) {
-                     defined($_->{$key}) && do {
+                     $_->{$key} eq "" or do {
                          $name = $_->{$key};
                          last;
                      };
@@ -517,11 +517,18 @@ ITEM
           . qq[  </menu>\n];
     }
     elsif (exists $schema->{item}) {
-        $generated_menu .= prepare_item(@{$schema->{item}});
+        my ($command, $label, $icon) = @{$schema->{item}};
+        $generated_menu .= $icons
+          ? <<"ITEM_WITH_ICON"
+    <item label="$label" icon="${\check_icon($icon)}"><action name="Execute"><execute>$command</execute></action></item>
+ITEM_WITH_ICON
+          : <<"ITEM";
+    <item label="$label"><action name="Execute"><execute>$command</execute></action></item>
+ITEM
     }
     elsif (exists $schema->{sep}) {
         $generated_menu .=
-          defined $schema->{sep}
+          defined($schema->{sep})
           ? qq[  <separator label="$schema->{sep}"/>\n]
           : qq[  <separator/>\n];
     }
