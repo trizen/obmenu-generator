@@ -24,23 +24,20 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 02 April 2015
+# Latest edit on: 02 June 2015
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
 #use strict;
 #use warnings;
 
-require Linux::DesktopFiles;
-
-$Linux::DesktopFiles::VERSION >= 0.09
-  || die "Update Linux::DesktopFiles to a newer version! (requires >=0.09)\n";
+require Linux::DesktopFiles;    # >= 0.09
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.63;
+my $version = 0.64;
 
 our ($CONFIG, $SCHEMA);
-my $output_h = *STDOUT;
+my $output_h = \*STDOUT;
 
 my ($pipe, $static, $icons, $reconfigure, $update_config, $reconf_openbox);
 
@@ -430,7 +427,6 @@ STATIC_MENU_HEADER
     my %cache;
 
     sub check_icon {
-        $_[0] // return '';
         $cache{$_[0]} //= ((chr ord($_[0]) eq '/') ? $_[0] : $desk_obj->get_icon_path($_[0])
                            || $desk_obj->get_icon_path($CONFIG{missing_icon}));
     }
@@ -476,6 +472,12 @@ foreach my $file ($desk_obj->get_desktop_files) {
     }
 }
 
+my %entities = (
+                '&' => '&amp;',
+                '"' => '&quot;',
+                '_' => '__',
+               );
+
 foreach my $schema (@$SCHEMA) {
     if (exists $schema->{cat}) {
         exists($categories{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
@@ -491,26 +493,24 @@ foreach my $schema (@$SCHEMA) {
                  my $exec = $_->{Exec};
 
                  foreach my $key (@{$CONFIG{name_keys}}) {
-                     $_->{$key} eq "" or do {
+                     if ($_->{$key}) {
                          $name = $_->{$key};
                          last;
-                     };
+                     }
                  }
 
-                 foreach my $item ($name, $exec) {
-                     $item =~ tr/"&// && do {
-                         $item =~ s/&/&amp;/g;
-                         $item =~ s/"/&quot;/g;
-                     };
-                 }
+                 # encode the entities
+                 $name =~ tr/"&_//
+                   && $name =~ s/([&"_])/$entities{$1}/g;
 
                  $icons
                    ? <<"ITEM_WITH_ICON"
-    <item label="$name" icon="${\check_icon($_->{Icon})}"><action name="Execute"><execute>$exec</execute></action></item>
+    <item label="$name" icon="${\check_icon($_->{Icon})}"><action name="Execute"><execute><![CDATA[$exec]]></execute></action></item>
 ITEM_WITH_ICON
                    : <<"ITEM";
-    <item label="$name"><action name="Execute"><execute>$exec</execute></action></item>
+    <item label="$name"><action name="Execute"><execute><![CDATA[$exec]]></execute></action></item>
 ITEM
+
                } @{$categories{$category}}
             )
           )
@@ -520,10 +520,10 @@ ITEM
         my ($command, $label, $icon) = @{$schema->{item}};
         $generated_menu .= $icons
           ? <<"ITEM_WITH_ICON"
-    <item label="$label" icon="${\check_icon($icon)}"><action name="Execute"><execute>$command</execute></action></item>
+    <item label="$label" icon="${\check_icon($icon)}"><action name="Execute"><execute><![CDATA[$command]]></execute></action></item>
 ITEM_WITH_ICON
           : <<"ITEM";
-    <item label="$label"><action name="Execute"><execute>$command</execute></action></item>
+    <item label="$label"><action name="Execute"><execute><![CDATA[$command]]></execute></action></item>
 ITEM
     }
     elsif (exists $schema->{sep}) {
@@ -576,19 +576,19 @@ RECONFIGURE
 EOL
 
         $generated_menu .= <<"CONFIG_MENU";
-    <item label="Configure autostarted apps"><action name="Execute"><execute>$CONFIG{editor} $openbox_conf/autostart</execute></action></item>
-    <item label="Edit rc.xml"><action name="Execute"><execute>$CONFIG{editor} $openbox_conf/rc.xml</execute></action></item>
+    <item label="Configure autostarted apps"><action name="Execute"><execute><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></execute></action></item>
+    <item label="Edit rc.xml"><action name="Execute"><execute><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></execute></action></item>
     <separator />
-    <item label="Generate a pipe menu"><action name="Execute"><execute>$0 -p</execute></action></item>
-    <item label="Generate a static menu"><action name="Execute"><execute>$0 -s</execute></action></item>
-    <item label="Generate a pipe menu with icons"><action name="Execute"><execute>$0 -p -i</execute></action></item>
-    <item label="Generate a static menu with icons"><action name="Execute"><execute>$0 -s -i</execute></action></item>
+    <item label="Generate a pipe menu"><action name="Execute"><execute><![CDATA[$0 -p]]></execute></action></item>
+    <item label="Generate a static menu"><action name="Execute"><execute><![CDATA[$0 -s]]></execute></action></item>
+    <item label="Generate a pipe menu with icons"><action name="Execute"><execute><![CDATA[$0 -p -i]]></execute></action></item>
+    <item label="Generate a static menu with icons"><action name="Execute"><execute><![CDATA[$0 -s -i]]></execute></action></item>
     <separator />
-    <item label="Edit menu.xml"><action name="Execute"><execute>$CONFIG{editor} $menufile</execute></action></item>
-    <item label="Edit the schema file"><action name="Execute"><execute>$CONFIG{editor} $schema_file</execute></action></item>
-    <item label="Edit the configuration file"><action name="Execute"><execute>$CONFIG{editor} $config_file</execute></action></item>
+    <item label="Edit menu.xml"><action name="Execute"><execute><![CDATA[$CONFIG{editor} $menufile]]></execute></action></item>
+    <item label="Edit the schema file"><action name="Execute"><execute><![CDATA[$CONFIG{editor} $schema_file]]></execute></action></item>
+    <item label="Edit the configuration file"><action name="Execute"><execute><![CDATA[$CONFIG{editor} $config_file]]></execute></action></item>
     <separator />
-    <item label="Regenerate configuration file"><action name="Execute"><execute>$0 -r</execute></action></item>
+    <item label="Regenerate configuration file"><action name="Execute"><execute><![CDATA[$0 -r]]></execute></action></item>
   </menu>
 CONFIG_MENU
     }
