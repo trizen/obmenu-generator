@@ -427,6 +427,7 @@ STATIC_MENU_HEADER
     my %cache;
 
     sub check_icon {
+        $_[0] // return '';
         $cache{$_[0]} //= ((chr ord($_[0]) eq '/') ? $_[0] : $desk_obj->get_icon_path($_[0])
                            || $desk_obj->get_icon_path($CONFIG{missing_icon}));
     }
