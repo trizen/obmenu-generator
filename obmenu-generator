@@ -353,8 +353,16 @@ my $desk_obj = Linux::DesktopFiles->new(
 
     home_dir => $home_dir,
 
-    categories   => [map $_->{cat}[0],      grep exists $_->{cat}, @$SCHEMA],
-    keys_to_keep => [@{$CONFIG{name_keys}}, 'Exec',                'Icon'],
+    categories   => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
+    keys_to_keep => [@{$CONFIG{name_keys}},
+                     'Exec', 'Icon',
+                     (
+                      defined($CONFIG{'Linux::DesktopFiles'}{skip_entry})
+                        && ref($CONFIG{'Linux::DesktopFiles'}{skip_entry}) eq 'ARRAY'
+                      ? (map { $_->{key} } @{$CONFIG{'Linux::DesktopFiles'}{skip_entry}})
+                      : ()
+                     ),
+                    ],
 
     $icons
     ? (
