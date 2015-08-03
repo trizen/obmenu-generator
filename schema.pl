@@ -82,10 +82,10 @@ our $SCHEMA = [
             {item => ["$editor ~/.config/obmenu-generator/config.pl", 'Menu Config', 'text-x-source']},
 
             {sep  => undef},
-            {item => ["$0 -p",       'Generate a pipe menu',              'menu-editor']},
-            {item => ["$0 -s -c",    'Generate a static menu',            'menu-editor']},
-            {item => ["$0 -p -i",    'Generate a pipe menu with icons',   'menu-editor']},
-            {item => ["$0 -s -i -c", 'Generate a static menu with icons', 'menu-editor']},
+            {item => ['obmenu-generator -p',       'Generate a pipe menu',              'menu-editor']},
+            {item => ['obmenu-generator -s -c',    'Generate a static menu',            'menu-editor']},
+            {item => ['obmenu-generator -p -i',    'Generate a pipe menu with icons',   'menu-editor']},
+            {item => ['obmenu-generator -s -i -c', 'Generate a static menu with icons', 'menu-editor']},
             {sep  => undef},
 
             {item => ['obmenu-generator -d', 'Refresh Icon Set', 'gtk-refresh']},
