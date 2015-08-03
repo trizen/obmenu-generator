@@ -251,7 +251,8 @@ my %CONFIG = (
         terminalize            => 1,
         terminalization_format => q{%s -e '%s'},
 
-        desktop_files_paths => ['/usr/share/applications'],
+        desktop_files_paths => ['/usr/share/applications',
+				'/usr/local/share/applications'],
 
         icon_dirs_first  => undef,
         icon_dirs_second => undef,
