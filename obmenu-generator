@@ -34,7 +34,7 @@
 require Linux::DesktopFiles;    # >= 0.09
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.65;
+my $version = 0.66;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -252,7 +252,7 @@ my %CONFIG = (
         terminalization_format => q{%s -e '%s'},
 
         desktop_files_paths => ['/usr/share/applications',
-				'/usr/local/share/applications'],
+                '/usr/local/share/applications'],
 
         icon_dirs_first  => undef,
         icon_dirs_second => undef,
