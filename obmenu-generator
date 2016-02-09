@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2011-2015 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+# Copyright (C) 2011-2016 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 22 October 2015
+# Latest edit on: 09 February 2016
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
@@ -285,7 +285,7 @@ if (not -e $schema_file) {
     if (-e (my $etc_schema_file = "/etc/xdg/$pkgname/schema.pl")) {
         require File::Copy;
         File::Copy::copy($etc_schema_file, $schema_file)
-          or die "$0: can't copy file `$etc_schema_file' to `$schema_file': $!\n";
+          or die "Can't copy file `$etc_schema_file' to `$schema_file': $!";
     }
     else {
         die "$0: schema file `$schema_file' does not exists!\n";
@@ -559,6 +559,10 @@ EXIT
     }
     elsif (exists $schema->{raw}) {
         $generated_menu .= qq[    $schema->{raw}\n];
+    }
+    elsif (exists $schema->{file}) {
+        sysopen(my $fh, $schema->{file}, 0) or die "Can't open file <<$schema->{file}>>: $!";
+        sysread($fh, $generated_menu, -s $schema->{file}, length($generated_menu));
     }
     elsif (exists $schema->{pipe}) {
         my ($command, $label, $icon) = @{$schema->{pipe}};

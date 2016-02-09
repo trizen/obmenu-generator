@@ -8,7 +8,8 @@
     cat:       add a category inside the menu             {cat => ["name", "label", "icon"]},
     sep:       horizontal line separator                  {sep => undef}, {sep => "label"},
     pipe:      a pipe menu entry                         {pipe => ["command", "label", "icon"]},
-    raw:       any valid Openbox XML string               {raw => q(xml string)},
+    file:      include the content of an XML file        {file => "/path/to/file.xml"},
+    raw:       any XML data supported by Openbox          {raw => q(xml data)},
     begin_cat: begin of a category                  {begin_cat => ["name", "icon"]},
     end_cat:   end of a category                      {end_cat => undef},
     obgenmenu: generic menu settings                {obgenmenu => ["label", "icon"]},
@@ -105,9 +106,9 @@ our $SCHEMA = [
     ## The xscreensaver lock command
     {item => ['xscreensaver-command -lock', 'Lock', 'lock']},
 
-    # This option uses the default Openbox's action "Exit"
+    ## This option uses the default Openbox's action "Exit"
     {exit => ['Exit', 'exit']},
 
-    # This uses the 'oblogout' menu
+    ## This uses the 'oblogout' menu
     # {item => ['oblogout', 'Exit', 'exit']},
 ]
