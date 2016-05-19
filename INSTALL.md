@@ -23,5 +23,5 @@
 
 ### Packages:
 
-- Arch Linux: (https://aur.archlinux.org/packages/obmenu-generator/)[https://aur.archlinux.org/packages/obmenu-generator/]
-- Debian: (https://software.opensuse.org/download.html?project=home%3AHead_on_a_Stick%3Aobmenu-generator&package=obmenu-generator)[https://software.opensuse.org/download.html?project=home%3AHead_on_a_Stick%3Aobmenu-generator&package=obmenu-generator]
+- [Arch Linux](https://aur.archlinux.org/packages/obmenu-generator/)
+- [Debian](https://software.opensuse.org/download.html?project=home%3AHead_on_a_Stick%3Aobmenu-generator&package=obmenu-generator)

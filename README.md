@@ -3,7 +3,8 @@ obmenu-generator
 
 A fast pipe/static menu generator for the Openbox Window Manager, with support for icons.
 
-<hr>
+---
+
 ```
 usage: obmenu-generator [options]
 
@@ -35,5 +36,10 @@ Examples:
    ** Dynamic menu with icons:
         obmenu-generator -p -i
 ```
+
 * <b>Config file:</b> `~/.config/obmenu-generator/config.pl`
 * <b>Schema file:</b> `~/.config/obmenu-generator/schema.pl`
+
+---
+
+Installation: [INSTALL.md](INSTALL.md)
