@@ -372,7 +372,6 @@ my $desk_obj = Linux::DesktopFiles->new(
     : (),
 
     terminal              => $CONFIG{terminal},
-    keep_empty_categories => 0,
     case_insensitive_cats => 1,
                                        );
 
