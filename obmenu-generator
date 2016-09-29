@@ -294,12 +294,9 @@ if (not -e $schema_file) {
 
 require $schema_file;    # Load the configuration files
 
-# Remove user's defined values
-my @valid_keys = grep exists $CONFIG{$_}, keys %{$CONFIG};
+# Remove invalid user-defined keys
+my @valid_keys = grep exists $CONFIG{$_}, keys %$CONFIG;
 @CONFIG{@valid_keys} = @{$CONFIG}{@valid_keys};
-
-# Keep user's defined values
-#@CONFIG{keys %{$CONFIG}} = values %{$CONFIG};
 
 if ($CONFIG{VERSION} != $version) {
     $update_config = 1;
