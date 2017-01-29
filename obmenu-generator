@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Openbox Menu Generator
-# A fast pipe/static menu generator for the Openbox Window Manager.
+# A fast menu generator for the Openbox Window Manager, with support for icons.
 
 # Edited on 07 December 2014 by Bob Currey
 #   added cmd line option -t "Menu Label Text" with default of "Applications"
@@ -104,7 +104,7 @@ my $config_help = <<"HELP";
                             Name is from the last slash to the end. (filename.desktop)
                             Example: qr/^(?:gimp|xterm)\\b/,    # skips 'gimp' and 'xterm'
 
-    | skip_entry          : Skip a destkop file if the value from a given key matches the regex.
+    | skip_entry          : Skip a desktop file if the value from a given key matches the regex.
                             Example: [
                                 {key => 'Name', re => qr/(?:about|terminal)/i},
                                 {key => 'Exec', re => qr/^xterm/},
@@ -285,7 +285,7 @@ if (not -e $schema_file) {
     if (-e (my $etc_schema_file = "/etc/xdg/$pkgname/schema.pl")) {
         require File::Copy;
         File::Copy::copy($etc_schema_file, $schema_file)
-          or die "Can't copy file `$etc_schema_file' to `$schema_file': $!";
+          or die "$0: can't copy file `$etc_schema_file' to `$schema_file': $!\n";
     }
     else {
         die "$0: schema file `$schema_file' does not exists!\n";
@@ -330,7 +330,7 @@ if ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file)) {
 require GDBM_File;
 tie my %desktop_file, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 
-{    # Regerate the icon db if the gtkrc file has been modified
+{    # Regenerate the icon db if the GTKRC file has been modified
     my $gtkrc_mtime = (stat $CONFIG{'Linux::DesktopFiles'}{gtk_rc_filename})[9];
 
     if (exists $desktop_file{__GTKRC_MTIME__}) {
