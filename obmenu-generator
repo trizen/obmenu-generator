@@ -64,9 +64,9 @@ sub usage {
 usage: $0 [options]
 
 options:
-    -p         : (re)generate a pipe menu
-    -s         : (re)generate a static menu
-    -i         : include icons in menus
+    -p         : generate a dynamic menu (pipe)
+    -s         : generate a static menu
+    -i         : include icons
     -m <id>    : menu id (default: 'root-menu')
     -t <label> : menu label text (default: 'Applications')
 
@@ -594,9 +594,9 @@ EOL
     <item label="Configure autostarted apps"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></command></action></item>
     <item label="Edit rc.xml"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></command></action></item>
     <separator />
-    <item label="Generate a pipe menu"><action name="Execute"><command><![CDATA[$0 -p]]></command></action></item>
+    <item label="Generate a dynamic menu"><action name="Execute"><command><![CDATA[$0 -p]]></command></action></item>
     <item label="Generate a static menu"><action name="Execute"><command><![CDATA[$0 -s]]></command></action></item>
-    <item label="Generate a pipe menu with icons"><action name="Execute"><command><![CDATA[$0 -p -i]]></command></action></item>
+    <item label="Generate a dynamic menu with icons"><action name="Execute"><command><![CDATA[$0 -p -i]]></command></action></item>
     <item label="Generate a static menu with icons"><action name="Execute"><command><![CDATA[$0 -s -i]]></command></action></item>
     <separator />
     <item label="Edit menu.xml"><action name="Execute"><command><![CDATA[$CONFIG{editor} $menufile]]></command></action></item>
