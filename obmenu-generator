@@ -251,7 +251,13 @@ my %CONFIG = (
         terminalize            => 1,
         terminalization_format => q{%s -e '%s'},
 
-        desktop_files_paths => ['/usr/share/applications', '/usr/local/share/applications'],
+#<<<
+        desktop_files_paths => [
+            '/usr/share/applications',
+            '/usr/local/share/applications',
+            '/usr/share/applications/kde4',
+        ],
+#>>>
 
         icon_dirs_first  => undef,
         icon_dirs_second => undef,
