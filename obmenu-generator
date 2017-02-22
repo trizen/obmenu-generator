@@ -34,7 +34,7 @@
 require Linux::DesktopFiles;    # >= 0.09
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.68;
+my $version = 0.69;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -63,7 +63,7 @@ sub usage {
     print <<"HELP";
 usage: $0 [options]
 
-options:
+menu:
     -p         : generate a dynamic menu (pipe)
     -s         : generate a static menu
     -i         : include icons
@@ -79,20 +79,15 @@ other:
     -d         : regenerate icons.db
     -c         : reconfigure openbox automatically
     -R         : reconfigure openbox and exit
+    -h         : print this message and exit
+    -v         : print version and exit
 
-Help:
-    -h  : print this message and exit
-    -v  : print version and exit
+examples:
+        $0 -p -i     # dynamic menu with icons
+        $0 -s -c     # static menu without icons
 
-Examples:
-   ** Static menu without icons:
-        $0 -s -c
-
-   ** Dynamic menu with icons:
-        $0 -p -i
-
-** Config file: $config_file
-** Schema file: $schema_file
+=> Config file: $config_file
+=> Schema file: $schema_file
 HELP
     exit 0;
 }
@@ -145,7 +140,7 @@ my $config_help = <<"HELP";
 
 
 || KEYS
-    | name_keys           : Valid keys for the item names.
+    | name_keys           : Valid keys for application name.
                             Example: ['Name[fr]', 'GenericName[fr]', 'Name'],   # french menu
 
 
@@ -160,8 +155,8 @@ my $config_help = <<"HELP";
 
 || NOTES
     | Regular expressions:
-        * use qr/RE/ instead of 'RE'
-        * use qr/RE/i for case insensitive mode
+        * use qr/.../ instead of '...'
+        * use qr/.../i for case insensitive mode
 HELP
 
 if (@ARGV) {
@@ -608,7 +603,7 @@ EOL
 CONFIG_MENU
     }
     else {
-        warn "$0: Invalid key '", (keys %{$schema})[0], "' in schema file!\n";
+        warn "$0: invalid key '", (keys %{$schema})[0], "' in schema file!\n";
     }
 }
 

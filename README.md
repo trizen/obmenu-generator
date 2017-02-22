@@ -8,10 +8,10 @@ A fast pipe/static menu generator for the Openbox Window Manager, with support f
 ```
 usage: obmenu-generator [options]
 
-options:
-    -p         : (re)generate a pipe menu
-    -s         : (re)generate a static menu
-    -i         : include icons in menus
+menu:
+    -p         : generate a dynamic menu (pipe)
+    -s         : generate a static menu
+    -i         : include icons
     -m <id>    : menu id (default: 'root-menu')
     -t <label> : menu label text (default: 'Applications')
 
@@ -24,17 +24,12 @@ other:
     -d         : regenerate icons.db
     -c         : reconfigure openbox automatically
     -R         : reconfigure openbox and exit
+    -h         : print this message and exit
+    -v         : print version and exit
 
-Help:
-    -h  : print this message and exit
-    -v  : print version and exit
-
-Examples:
-   ** Static menu without icons:
-        obmenu-generator -s -c
-
-   ** Dynamic menu with icons:
-        obmenu-generator -p -i
+examples:
+        obmenu-generator -p -i     # dynamic menu with icons
+        obmenu-generator -s -c     # static menu without icons
 ```
 
 * <b>Config file:</b> `~/.config/obmenu-generator/config.pl`
