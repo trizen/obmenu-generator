@@ -34,7 +34,7 @@
 require Linux::DesktopFiles;    # >= 0.09
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.69;
+my $version = 0.70;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
