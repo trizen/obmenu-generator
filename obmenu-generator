@@ -174,6 +174,7 @@ if (@ARGV) {
             $static = 1;
         }
         elsif ($arg eq '-d') {
+            unlink $cache_db;
             unlink $icons_db;
         }
         elsif ($arg eq '-u') {
@@ -577,34 +578,51 @@ PIPE
     }
     elsif (exists $schema->{obgenmenu}) {
         my ($name, $icon) = ref($schema->{obgenmenu}) eq 'ARRAY' ? @{$schema->{obgenmenu}} : $schema->{obgenmenu};
-        $generated_menu .= ($icons ? <<"CONFIG_MENU_WITH_ICON" : <<"CONFIG_MENU") . <<'RECONFIGURE';
+        $generated_menu .= ($icons ? <<"MENU_WITH_ICON" : <<"MENU");
   <menu id="$name" label="$name" icon="${\check_icon($icon)}">
-CONFIG_MENU_WITH_ICON
+MENU_WITH_ICON
   <menu id="$name" label="$name">
-CONFIG_MENU
-    <item label="Reconfigure Openbox"><action name="Reconfigure" /></item>
-RECONFIGURE
+MENU
 
-        -e '/usr/bin/obconf' && ($generated_menu .= <<'EOL');
-    <item label="Openbox Configuration Manager"><action name="Execute"><command>obconf</command></action></item>
-EOL
-
-        $generated_menu .= <<"CONFIG_MENU";
-    <item label="Configure autostarted apps"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></command></action></item>
-    <item label="Edit rc.xml"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></command></action></item>
-    <separator />
-    <item label="Generate a dynamic menu"><action name="Execute"><command><![CDATA[$0 -p]]></command></action></item>
-    <item label="Generate a static menu"><action name="Execute"><command><![CDATA[$0 -s]]></command></action></item>
-    <item label="Generate a dynamic menu with icons"><action name="Execute"><command><![CDATA[$0 -p -i]]></command></action></item>
-    <item label="Generate a static menu with icons"><action name="Execute"><command><![CDATA[$0 -s -i]]></command></action></item>
-    <separator />
-    <item label="Edit menu.xml"><action name="Execute"><command><![CDATA[$CONFIG{editor} $menufile]]></command></action></item>
-    <item label="Edit the schema file"><action name="Execute"><command><![CDATA[$CONFIG{editor} $schema_file]]></command></action></item>
-    <item label="Edit the configuration file"><action name="Execute"><command><![CDATA[$CONFIG{editor} $config_file]]></command></action></item>
-    <separator />
-    <item label="Regenerate configuration file"><action name="Execute"><command><![CDATA[$0 -r]]></command></action></item>
+        $generated_menu .= ($icons ? <<"ITEMS_WITH_ICONS" : <<"ITEMS");
+    <item label="Menu Schema" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $schema_file]]></command></action></item>
+    <item label="Menu Config" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $config_file]]></command></action></item>
+  <separator/>
+    <item label="Generate a static menu" icon="${\check_icon('accessories-text-editor')}"><action name="Execute"><command><![CDATA[obmenu-generator -s -c]]></command></action></item>
+    <item label="Generate a static menu with icons" icon="${\check_icon('accessories-text-editor')}"><action name="Execute"><command><![CDATA[obmenu-generator -s -i -c]]></command></action></item>
+  <separator/>
+    <item label="Generate a dynamic menu" icon="${\check_icon('accessories-text-editor')}"><action name="Execute"><command><![CDATA[obmenu-generator -p]]></command></action></item>
+    <item label="Generate a dynamic menu with icons" icon="${\check_icon('accessories-text-editor')}"><action name="Execute"><command><![CDATA[obmenu-generator -p -i]]></command></action></item>
+  <separator/>
+  <menu id="Openbox config files" label="Openbox" icon="${\check_icon('openbox')}">
+    <item label="Openbox Autostart" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></command></action></item>
+    <item label="Openbox RC" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></command></action></item>
+    <item label="Openbox Menu" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/menu.xml]]></command></action></item>
+    <item label="Reconfigure" icon="${\check_icon('openbox')}"><action name="Reconfigure"/></item>
   </menu>
-CONFIG_MENU
+  <separator/>
+    <item label="Refresh Icon Set" icon="${\check_icon('view-refresh')}"><action name="Execute"><command><![CDATA[obmenu-generator -d]]></command></action></item>
+  </menu>
+ITEMS_WITH_ICONS
+    <item label="Menu Schema"><action name="Execute"><command><![CDATA[$CONFIG{editor} $schema_file]]></command></action></item>
+    <item label="Menu Config"><action name="Execute"><command><![CDATA[$CONFIG{editor} $config_file]]></command></action></item>
+  <separator/>
+    <item label="Generate a static menu"><action name="Execute"><command><![CDATA[obmenu-generator -s -c]]></command></action></item>
+    <item label="Generate a static menu with icons"><action name="Execute"><command><![CDATA[obmenu-generator -s -i -c]]></command></action></item>
+  <separator/>
+    <item label="Generate a dynamic menu"><action name="Execute"><command><![CDATA[obmenu-generator -p]]></command></action></item>
+    <item label="Generate a dynamic menu with icons"><action name="Execute"><command><![CDATA[obmenu-generator -p -i]]></command></action></item>
+  <separator/>
+  <menu id="Openbox config files" label="Openbox">
+    <item label="Openbox Autostart"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></command></action></item>
+    <item label="Openbox RC"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></command></action></item>
+    <item label="Openbox Menu"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/menu.xml]]></command></action></item>
+    <item label="Reconfigure Openbox"><action name="Reconfigure" /></item>
+  </menu>
+  <separator/>
+    <item label="Refresh Icon Set"><action name="Execute"><command><![CDATA[obmenu-generator -d]]></command></action></item>
+  </menu>
+ITEMS
     }
     else {
         warn "$0: invalid key '", (keys %{$schema})[0], "' in schema file!\n";
