@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2011-2016 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+# Copyright (C) 2011-2017 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Program: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 17 October 2016
+# Latest edit on: 26 March 2017
 # Website: https://github.com/trizen/obmenu-generator
 
 #use 5.014;
@@ -338,6 +338,10 @@ tie my %desktop_file, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
         if ($desktop_file{__GTKRC_MTIME__} != $gtkrc_mtime) {
             print STDERR "** Regenerating the icons DB...\n";
             unlink $icons_db;
+            print STDERR "** Regenerating the cache DB...\n";
+            untie %desktop_file;
+            unlink $cache_db;
+            tie %desktop_file, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
             $desktop_file{__GTKRC_MTIME__} = $gtkrc_mtime;
         }
     }
