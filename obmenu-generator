@@ -397,11 +397,13 @@ if ($pipe or $static) {
         }
 
         require Cwd;
-        my $exec_name = Cwd::abs_path($0) . ($icons ? q{ -i} : q{});
+        my $exec_name = Cwd::abs_path($0);
 
         if (not -x $exec_name) {
             $exec_name = "$^X $exec_name";
         }
+
+        $icons && ($exec_name .= q{ -i});
 
         open my $fh, '>', $menufile
           or die "Can't open file '${menufile}' for write: $!";
