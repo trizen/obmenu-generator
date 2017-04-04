@@ -257,7 +257,7 @@ my %CONFIG = (
 
         icon_dirs_first  => undef,
         icon_dirs_second => undef,
-        icon_dirs_last   => undef,
+        icon_dirs_last   => ['/usr/local/share/icons'],
         strict_icon_dirs => undef,
 
         skip_svg_icons => 0,
