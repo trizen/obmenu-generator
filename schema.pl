@@ -10,7 +10,7 @@
     pipe:      a pipe menu entry                         {pipe => ["command", "label", "icon"]},
     file:      include the content of an XML file        {file => "/path/to/file.xml"},
     raw:       any XML data supported by Openbox          {raw => q(xml data)},
-    begin_cat: begin of a category                  {begin_cat => ["name", "icon"]},
+    begin_cat: beginning of a category              {begin_cat => ["name", "icon"]},
     end_cat:   end of a category                      {end_cat => undef},
     obgenmenu: generic menu settings                {obgenmenu => ["label", "icon"]},
     exit:      default "Exit" action                     {exit => ["label", "icon"]},
