@@ -34,7 +34,7 @@
 require Linux::DesktopFiles;    # >= 0.09
 
 my $pkgname = 'obmenu-generator';
-my $version = 0.70;
+my $version = 0.71;
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -275,6 +275,7 @@ sub dump_configuration {
     open my $config_fh, '>', $config_file
       or die "Can't open file '${config_file}' for write: $!";
     my $dumped_config = q{our $CONFIG = } . Data::Dump::dump(\%CONFIG);
+    $dumped_config =~ s/\Q$home_dir\E/\$ENV{HOME}/g;
     print $config_fh $config_documentation, $dumped_config;
     close $config_fh;
 }
