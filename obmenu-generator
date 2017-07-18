@@ -21,11 +21,11 @@
 # Edited on 07 December 2014 by Bob Currey
 #   added cmd line option -t "Menu Label Text" with default of "Applications"
 
-# Program: obmenu-generator
+# Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 26 March 2017
-# Website: https://github.com/trizen/obmenu-generator
+# Latest edit on: 18 July 2017
+# https://github.com/trizen/obmenu-generator
 
 use 5.014;
 
