@@ -28,7 +28,6 @@
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
-
 #use strict;
 #use warnings;
 
@@ -114,7 +113,7 @@ my $config_help = <<"HELP";
 || ICON SETTINGS
     | gtk_rc_filename     : Absolute path to the GTK configuration file.
     | missing_icon        : Use this icon for missing icons (default: gtk-missing-image)
-    | icon_size           : Prefered size for icons. (default: 32)
+    | icon_size           : Preferred size for icons. (default: 16)
     | skip_svg_icons      : Ignore SVG icons. (default: 0)
     | force_svg_icons     : Use only SVG icons. (default: 0)
     | force_icon_size     : Use only icons at the prefered icon size, if possible. (default: 0)
@@ -217,7 +216,6 @@ my %CONFIG = (
 
         keep_unknown_categories => 1,
         unknown_category_key    => 'other',
-        gtk_rc_filename         => "$home_dir/.gtkrc-2.0",
 
         skip_entry       => undef,
         substitutions    => undef,
@@ -237,12 +235,13 @@ my %CONFIG = (
 
     },
 
-    name_keys    => ['Name'],
-    terminal     => 'xterm',
-    editor       => 'geany',
-    missing_icon => 'gtk-missing-image',
+    name_keys       => ['Name'],
+    terminal        => 'xterm',
+    editor          => 'geany',
+    missing_icon    => 'gtk-missing-image',
+    gtk_rc_filename => "$home_dir/.gtkrc-2.0",
 
-    icon_size       => 32,
+    icon_size       => 16,
     skip_svg_icons  => 0,
     force_svg_icons => 0,
     force_icon_size => 0,
@@ -314,7 +313,7 @@ require GDBM_File;
 tie my %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 
 {    # Regenerate the icon db if the GTKRC file has been modified
-    my $gtkrc_mtime = (stat $CONFIG{'Linux::DesktopFiles'}{gtk_rc_filename})[9];
+    my $gtkrc_mtime = (stat $CONFIG{gtk_rc_filename})[9];
 
     if (exists $cache_db{__GTKRC_MTIME__}) {
         if ($cache_db{__GTKRC_MTIME__} != $gtkrc_mtime
