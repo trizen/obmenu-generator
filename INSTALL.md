@@ -3,6 +3,7 @@
 * Required dependencies:
 
     - perl>=5.14.0
+    - gtk2-perl ([Gtk2](https://metacpan.org/pod/Gtk2))
     - perl-data-dump ([Data::Dump](https://metacpan.org/pod/Data::Dump))
     - perl-linux-desktopfiles>=0.09 ([Linux::DesktopFiles](https://metacpan.org/pod/Linux::DesktopFiles))
 
