@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 21 July 2017
+# Latest edit on: 22 July 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -291,18 +291,27 @@ if ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file)) {
     unlink $cache_db;
 }
 
-if (!$with_icons) {
-
-    # Minor performance improvement.
-    # XXX: don't do this in production code!
+#
+## Remove the overhead of loading some unneeded modules.
+#
+if ($with_icons) {
     @INC{
         qw(
           strict.pm
           warnings.pm
+          warnings/register.pm
+          )
+        } = ();
+}
+else {
+    @INC{
+        qw(
+          strict.pm
+          warnings.pm
+          warnings/register.pm
           Tie/Hash.pm
           Carp.pm
           Exporter.pm
-          warnings/register.pm
           )
         } = ();
 }
