@@ -84,7 +84,7 @@ our $SCHEMA = [
         {item => ['obmenu-generator -p -i',    'Generate a dynamic menu with icons', 'accessories-text-editor']},
         {sep  => undef},
 
-        {item    => ['obmenu-generator -d', 'Refresh Icon Set', 'view-refresh']},
+        {item    => ['obmenu-generator -d', 'Refresh icon set', 'view-refresh']},
       {end => undef},
 
       # Openbox category
