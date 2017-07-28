@@ -193,7 +193,7 @@ if (@ARGV) {
 if (not -d $config_dir) {
     require File::Path;
     File::Path::make_path($config_dir)
-      or die "$0: can't create config directory `$config_dir': $!\n";
+      or die "$0: can't create configuration directory `$config_dir': $!\n";
 }
 
 if ($with_icons and not -d $icons_dir) {
