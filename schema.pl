@@ -105,5 +105,5 @@ our $SCHEMA = [
     {exit => ['Exit', 'application-exit']},
 
     ## This uses the 'oblogout' menu
-    # {item => ['oblogout', 'Exit', 'exit']},
+    # {item => ['oblogout', 'Exit', 'application-exit']},
 ]
