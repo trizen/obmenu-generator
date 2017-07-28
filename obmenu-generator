@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 22 July 2017
+# Latest edit on: 28 July 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -122,7 +122,6 @@ my $config_help = <<"HELP";
     | name_keys           : Valid keys for application name.
                             Example: ['Name[fr]', 'GenericName[fr]', 'Name'],   # french menu
 
-
 || PATHS
     | desktop_files_paths   : Absolute paths which contain .desktop files.
                               Example: [
@@ -130,7 +129,6 @@ my $config_help = <<"HELP";
                                 "\$ENV{HOME}/.local/share/applications",
                                 glob("\$ENV{HOME}/.local/share/applications/wine/Programs/*"),
                               ],
-
 
 || NOTES
     | Regular expressions:
@@ -342,9 +340,8 @@ tie my %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 my $desk_obj = Linux::DesktopFiles->new(
     %{$CONFIG{'Linux::DesktopFiles'}},
 
-    home_dir => $home_dir,
+    categories => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
 
-    categories   => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
     keys_to_keep => [@{$CONFIG{name_keys}},
                      'Exec',
                      ($with_icons ? 'Icon' : ()),
@@ -356,6 +353,7 @@ my $desk_obj = Linux::DesktopFiles->new(
                      ),
                     ],
 
+    home_dir              => $home_dir,
     terminal              => $CONFIG{terminal},
     case_insensitive_cats => 1,
                                        );
@@ -553,10 +551,18 @@ ITEM
           ? qq[  <separator label="$schema->{sep}"/>\n]
           : qq[  <separator/>\n];
     }
+    elsif (exists $schema->{beg}) {
+        $generated_menu .= begin_category(@{$schema->{beg}});
+    }
     elsif (exists $schema->{begin_cat}) {
+        warn "[WARNING] <<begin_cat>> is deprecated: use <<beg>> instead!\n";
         $generated_menu .= begin_category(@{$schema->{begin_cat}});
     }
+    elsif (exists $schema->{end}) {
+        $generated_menu .= qq[  </menu>\n];
+    }
     elsif (exists $schema->{end_cat}) {
+        warn "[WARNING] <<end_cat>> is deprecated: use <<end>> instead!\n";
         $generated_menu .= qq[  </menu>\n];
     }
     elsif (exists $schema->{exit}) {
