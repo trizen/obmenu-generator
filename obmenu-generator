@@ -57,6 +57,7 @@ my $config_file     = "$config_dir/config.pl";
 my $openbox_conf    = "$xdg_config_home/openbox";
 my $menufile        = "$openbox_conf/menu.xml";
 my $cache_db        = "$config_dir/cache.db";
+my $icons_dir       = "$config_dir/icons";
 
 sub usage {
     print <<"HELP";
@@ -114,7 +115,6 @@ my $config_help = <<"HELP";
     | gtk_rc_filename     : Absolute path to the GTK configuration file.
     | missing_icon        : Use this icon for missing icons (default: gtk-missing-image)
     | icon_size           : Preferred size for icons. (default: 32)
-    | skip_svg_icons      : Ignore SVG icons. (default: 0)
     | force_svg_icons     : Use only SVG icons. (default: 0)
     | force_icon_size     : Use only icons at the preferred icon size, if possible. (default: 0)
 
@@ -193,7 +193,14 @@ if (@ARGV) {
 if (not -d $config_dir) {
     require File::Path;
     File::Path::make_path($config_dir)
-      or die "Can't create directory '${config_dir}': $!";
+      or die "$0: can't create config directory `$config_dir': $!\n";
+}
+
+if ($with_icons and not -d $icons_dir) {
+    unlink($cache_db);
+    require File::Path;
+    File::Path::make_path($icons_dir)
+      or warn "$0: can't create icon path `$icons_dir': $!\n";
 }
 
 my $config_documentation = <<"EOD";
@@ -240,7 +247,6 @@ my %CONFIG = (
     gtk_rc_filename => "$home_dir/.gtkrc-2.0",
 
     icon_size       => 32,
-    skip_svg_icons  => 0,
     force_svg_icons => 0,
     force_icon_size => 0,
 
@@ -420,6 +426,7 @@ sub get_icon_path {
 
     state $gtk = do {
         require Gtk2;
+        require Digest::MD5;
         'Gtk2'->init;
         'Gtk2';
     };
@@ -428,18 +435,32 @@ sub get_icon_path {
         "${gtk}::IconTheme"->get_default;
     };
 
+#<<<
     state $flags = "${gtk}::IconLookupFlags"->new(
-                                                  [($CONFIG{force_icon_size} ? 'force-size' : ()),
-                                                   ($CONFIG{skip_svg_icons}  ? 'no-svg'     : ()),
-                                                   ($CONFIG{force_svg_icons} ? 'force-svg'  : ()),
-                                                  ]
-                                                 );
+        [
+            ($CONFIG{force_icon_size} ? 'force-size' : ()),
+            ($CONFIG{force_svg_icons} ? 'force-svg'  : ()),
+        ]
+    );
+#>>>
 
-    my $icon_info = $theme->lookup_icon($name, $CONFIG{icon_size}, $flags);
+    foreach my $icon_name ($name, $CONFIG{missing_icon}) {
 
-    defined($icon_info)
-      ? $icon_info->get_filename
-      : eval { $theme->lookup_icon($CONFIG{missing_icon}, $CONFIG{icon_size}, $flags)->get_filename };
+#<<<
+        my $pixbuf = eval {
+            $theme->load_icon($icon_name, $CONFIG{icon_size}, $flags);
+        };
+#>>>
+
+        if (defined($pixbuf)) {
+            my $md5      = Digest::MD5::md5_hex($pixbuf->get_pixels);
+            my $filename = "$icons_dir/$md5.png";
+            $pixbuf->save($filename, 'png');
+            return $filename;
+        }
+    }
+
+    return '';
 }
 
 sub check_icon {
