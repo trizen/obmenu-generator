@@ -9,7 +9,7 @@
     sep:       horizontal line separator                  {sep => undef}, {sep => "label"},
     pipe:      a pipe menu entry                         {pipe => ["command", "label", "icon"]},
     file:      include the content of an XML file        {file => "/path/to/file.xml"},
-    raw:       any XML data supported by Openbox          {raw => q(xml data)},
+    raw:       any XML data supported by Openbox          {raw => q(...)},
     beg:       begin of a category                        {beg => ["name", "icon"]},
     end:       end of a category                          {end => undef},
     obgenmenu: generic menu settings                {obgenmenu => ["label", "icon"]},
@@ -52,7 +52,7 @@ our $SCHEMA = [
 
     #                  LABEL          ICON
     #{beg => ['My category',  'cat-icon']},
-    #           ... some items ...
+    #          ... some items ...
     #{end => undef},
 
     #            COMMAND     LABEL        ICON
@@ -84,7 +84,7 @@ our $SCHEMA = [
         {item => ['obmenu-generator -p -i',    'Generate a dynamic menu with icons', 'accessories-text-editor']},
         {sep  => undef},
 
-        {item    => ['obmenu-generator -d', 'Refresh Icon Set', 'view-refresh']},
+        {item    => ['obmenu-generator -d', 'Refresh icon set', 'view-refresh']},
       {end => undef},
 
       # Openbox category
@@ -101,9 +101,9 @@ our $SCHEMA = [
     ## The xscreensaver lock command
     {item => ['xscreensaver-command -lock', 'Lock', 'system-lock-screen']},
 
-    ## This option uses the default Openbox's action "Exit"
+    ## This option uses the default Openbox's "Exit" action
     {exit => ['Exit', 'application-exit']},
 
     ## This uses the 'oblogout' menu
-    # {item => ['oblogout', 'Exit', 'exit']},
+    # {item => ['oblogout', 'Exit', 'application-exit']},
 ]
