@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 28 July 2017
+# Latest edit on: 05 August 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
