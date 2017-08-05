@@ -455,7 +455,7 @@ sub get_icon_path {
         if (defined($pixbuf)) {
             my $md5      = Digest::MD5::md5_hex($pixbuf->get_pixels);
             my $filename = "$icons_dir/$md5.png";
-            $pixbuf->save($filename, 'png');
+            $pixbuf->save($filename, 'png') if not -e $filename;
             return $filename;
         }
     }
