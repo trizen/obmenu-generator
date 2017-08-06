@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 28 July 2017
+# Latest edit on: 05 August 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -258,7 +258,7 @@ sub dump_configuration {
     open my $config_fh, '>', $config_file
       or die "Can't open file '${config_file}' for write: $!";
     my $dumped_config = q{our $CONFIG = } . Data::Dump::dump(\%CONFIG);
-    $dumped_config =~ s/\Q$home_dir\E/\$ENV{HOME}/g;
+    $dumped_config =~ s/\Q$home_dir\E/\$ENV{HOME}/g if ($home_dir eq $ENV{HOME});
     print $config_fh $config_documentation, $dumped_config;
     close $config_fh;
 }
@@ -455,7 +455,7 @@ sub get_icon_path {
         if (defined($pixbuf)) {
             my $md5      = Digest::MD5::md5_hex($pixbuf->get_pixels);
             my $filename = "$icons_dir/$md5.png";
-            $pixbuf->save($filename, 'png');
+            $pixbuf->save($filename, 'png') if not -e $filename;
             return $filename;
         }
     }
