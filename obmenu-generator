@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 05 August 2017
+# Latest edit on: 06 August 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -448,24 +448,30 @@ sub get_icon_path {
 
 #<<<
         my $pixbuf = eval {
-            $theme->load_icon($icon_name, $CONFIG{icon_size}, $flags);
+            (substr($name, 0, 1) eq '/')
+            ? (substr($name, -4) eq '.xpm')
+                ? "${gtk}::Gdk::Pixbuf"->new_from_file($name)->scale_simple($CONFIG{icon_size}, $CONFIG{icon_size}, 'hyper')
+                : "${gtk}::Gdk::Pixbuf"->new_from_file_at_size($name, $CONFIG{icon_size}, $CONFIG{icon_size})
+            : $theme->load_icon($icon_name, $CONFIG{icon_size}, $flags);
         };
 #>>>
 
         if (defined($pixbuf)) {
-            my $md5      = Digest::MD5::md5_hex($pixbuf->get_pixels);
-            my $filename = "$icons_dir/$md5.png";
-            $pixbuf->save($filename, 'png') if not -e $filename;
-            return $filename;
+            my $md5  = Digest::MD5::md5_hex($pixbuf->get_pixels);
+            my $path = "$icons_dir/$md5.png";
+            $pixbuf->save($path, 'png') if not -e $path;
+            return $path;
         }
     }
 
     return '';
 }
 
-sub check_icon {
-    substr(($_[0] // return ''), 0, 1) eq '/' && return $_[0];
-    $cache_db{$_[0]} //= get_icon_path($_[0]);
+{
+    my %fast_cache;
+    sub check_icon {
+        $fast_cache{$_[0] // return ''} //= ($cache_db{$_[0]} //= get_icon_path($_[0]));
+    }
 }
 
 sub begin_category {
