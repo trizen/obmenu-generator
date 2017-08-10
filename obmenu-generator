@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created on: 25 March 2011
-# Latest edit on: 06 August 2017
+# Latest edit on: 10 August 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -477,10 +477,10 @@ sub get_icon_path {
 sub begin_category {
     $with_icons
       ? <<"MENU_WITH_ICON"
-  <menu id="$_[0]" icon="${\check_icon($_[1])}" label="$_[0]">
+  <menu id="${\rand()}" icon="${\check_icon($_[1])}" label="$_[0]">
 MENU_WITH_ICON
       : <<"MENU"
-  <menu id="$_[0]" label="$_[0]">
+  <menu id="${\rand()}" label="$_[0]">
 MENU
 }
 
@@ -613,18 +613,18 @@ EXIT
         my ($command, $label, $icon) = @{$schema->{pipe}};
         $generated_menu .= $with_icons
           ? <<"PIPE_WITH_ICON"
-    <menu id="$label" label="$label" execute="$command" icon="${\check_icon($icon)}"/>
+    <menu id="${\rand()}" label="$label" execute="$command" icon="${\check_icon($icon)}"/>
 PIPE_WITH_ICON
           : <<"PIPE";
-    <menu id="$label" label="$label" execute="$command"/>
+    <menu id="${\rand()}" label="$label" execute="$command"/>
 PIPE
     }
     elsif (exists $schema->{obgenmenu}) {
         my ($name, $icon) = ref($schema->{obgenmenu}) eq 'ARRAY' ? @{$schema->{obgenmenu}} : $schema->{obgenmenu};
         $generated_menu .= ($with_icons ? <<"MENU_WITH_ICON" : <<"MENU");
-  <menu id="$name" label="$name" icon="${\check_icon($icon)}">
+  <menu id="${\rand()}" label="$name" icon="${\check_icon($icon)}">
 MENU_WITH_ICON
-  <menu id="$name" label="$name">
+  <menu id="${\rand()}" label="$name">
 MENU
 
         $generated_menu .= ($with_icons ? <<"ITEMS_WITH_ICONS" : <<"ITEMS");
@@ -637,7 +637,7 @@ MENU
     <item label="Generate a dynamic menu" icon="${\check_icon('accessories-text-editor')}"><action name="Execute"><command><![CDATA[obmenu-generator -p]]></command></action></item>
     <item label="Generate a dynamic menu with icons" icon="${\check_icon('accessories-text-editor')}"><action name="Execute"><command><![CDATA[obmenu-generator -p -i]]></command></action></item>
   <separator/>
-  <menu id="Openbox config files" label="Openbox" icon="${\check_icon('openbox')}">
+  <menu id="${\rand()}" label="Openbox" icon="${\check_icon('openbox')}">
     <item label="Openbox Autostart" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></command></action></item>
     <item label="Openbox RC" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></command></action></item>
     <item label="Openbox Menu" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/menu.xml]]></command></action></item>
@@ -656,7 +656,7 @@ ITEMS_WITH_ICONS
     <item label="Generate a dynamic menu"><action name="Execute"><command><![CDATA[obmenu-generator -p]]></command></action></item>
     <item label="Generate a dynamic menu with icons"><action name="Execute"><command><![CDATA[obmenu-generator -p -i]]></command></action></item>
   <separator/>
-  <menu id="Openbox config files" label="Openbox">
+  <menu id="${\rand()}" label="Openbox">
     <item label="Openbox Autostart"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/autostart]]></command></action></item>
     <item label="Openbox RC"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/rc.xml]]></command></action></item>
     <item label="Openbox Menu"><action name="Execute"><command><![CDATA[$CONFIG{editor} $openbox_conf/menu.xml]]></command></action></item>
