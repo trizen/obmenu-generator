@@ -23,8 +23,8 @@
 
 # Name: obmenu-generator
 # License: GPLv3
-# Created on: 25 March 2011
-# Latest edit on: 10 August 2017
+# Created: 25 March 2011
+# Latest edit: 11 September 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -257,7 +257,7 @@ sub dump_configuration {
     require Data::Dump;
     open my $config_fh, '>', $config_file
       or die "Can't open file '${config_file}' for write: $!";
-    my $dumped_config = q{our $CONFIG = } . Data::Dump::dump(\%CONFIG);
+    my $dumped_config = q{our $CONFIG = } . Data::Dump::dump(\%CONFIG) . "\n";
     $dumped_config =~ s/\Q$home_dir\E/\$ENV{HOME}/g if ($home_dir eq $ENV{HOME});
     print $config_fh $config_documentation, $dumped_config;
     close $config_fh;
