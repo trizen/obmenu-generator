@@ -359,8 +359,8 @@ my $desk_obj = Linux::DesktopFiles->new(
                      ),
                     ],
 
-    home_dir              => $home_dir,
-    terminal              => $CONFIG{terminal},
+    terminal => $CONFIG{terminal},
+
     case_insensitive_cats => 1,
                                        );
 
@@ -469,6 +469,7 @@ sub get_icon_path {
 
 {
     my %fast_cache;
+
     sub check_icon {
         $fast_cache{$_[0] // return ''} //= ($cache_db{$_[0]} //= get_icon_path($_[0]));
     }
