@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 11 September 2017
+# Latest edit: 16 September 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -501,8 +501,10 @@ foreach my $file ($desk_obj->get_desktop_files) {
     if (not $cache_ok) {
         $desk_obj->parse(\my %cats, $file);
 
-        my $fields = %cats ? (values %cats)[0][0] : {__IGNORE__ => 1};
-        %info = (%{$fields}, __MTIME__ => $mtime);
+        %info = %cats ? (%{(values %cats)[0][0]}, __MTIME__ => $mtime) : do {
+            $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);
+            next;
+        };
 
         if ($with_icons) {
             $info{Icon} = check_icon($info{Icon});
@@ -510,8 +512,6 @@ foreach my $file ($desk_obj->get_desktop_files) {
 
         $info{__CATEGORIES__} = join(';', keys %cats);
         $cache_db{$file} = join("\0\1\0", %info);
-
-        next if exists $info{__IGNORE__};
     }
 
     foreach my $category (split(/;/, $info{__CATEGORIES__})) {
