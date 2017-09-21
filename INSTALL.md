@@ -19,10 +19,11 @@
 
 ### Customizing:
 
-- the `schema.pl` file provides a direct customization access for the menu that will be generated.
+- the `schema.pl` file provides a direct customization access to the menu that will be generated.
 - adding or removing a given entry from the `schema.pl` file, is reflected inside the generated menu.
 
 ### Packages:
 
 - [Arch Linux](https://aur.archlinux.org/packages/obmenu-generator/)
 - [Debian](https://software.opensuse.org/download.html?project=home%3AHead_on_a_Stick%3Aobmenu-generator&package=obmenu-generator)
+- [Slackware](https://slackbuilds.org/repository/14.2/desktop/obmenu-generator/)
