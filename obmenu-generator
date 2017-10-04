@@ -453,11 +453,13 @@ require GDBM_File;
 tie my %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 
 # Regenerate the icon db if the GTKRC file has been modified
-if ($with_icons and !$db_clean) {
+if ($with_icons) {
     my $gtkrc_mtime = (stat $CONFIG{gtk_rc_filename})[9];
 
-    if (!exists($cache_db{__GTKRC_MTIME__})
-        or $cache_db{__GTKRC_MTIME__} != $gtkrc_mtime) {
+    if ($db_clean) {
+        $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
+    }
+    elsif (!exists($cache_db{__GTKRC_MTIME__}) or $cache_db{__GTKRC_MTIME__} != $gtkrc_mtime) {
         print STDERR "** Regenerating the cache DB...\n";
         untie %cache_db;
         unlink $cache_db;
