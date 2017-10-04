@@ -291,12 +291,6 @@ if ($CONFIG{VERSION} != $version) {
     $CONFIG{VERSION} = $version;
 }
 
-# Regenerate the cache db if the config or schema file has been modified
-if ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file)) {
-    print STDERR "** Regenerating the cache DB...\n";
-    unlink $cache_db;
-}
-
 #
 ## Remove the overhead of loading some unneeded modules.
 #
@@ -320,29 +314,6 @@ else {
           Exporter.pm
           )
         } = ();
-}
-
-require GDBM_File;
-tie my %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
-
-{    # Regenerate the icon db if the GTKRC file has been modified
-    my $gtkrc_mtime = (stat $CONFIG{gtk_rc_filename})[9];
-
-    if (exists $cache_db{__GTKRC_MTIME__}) {
-        if ($cache_db{__GTKRC_MTIME__} != $gtkrc_mtime
-            or ($with_icons and not exists $cache_db{__WITH_ICONS__})) {
-            print STDERR "** Regenerating the cache DB...\n";
-            untie %cache_db;
-            unlink $cache_db;
-            tie %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
-            $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
-            $cache_db{__WITH_ICONS__} = 1 if $with_icons;
-        }
-    }
-    else {
-        $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
-        $cache_db{__WITH_ICONS__} = 1 if $with_icons;
-    }
 }
 
 my $desk_obj = Linux::DesktopFiles->new(
@@ -467,6 +438,32 @@ sub get_icon_path {
     }
 
     return '';
+}
+
+my $db_clean = 0;
+
+# Regenerate the cache db if the config or schema file has been modified
+if ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file)) {
+    print STDERR "** Regenerating the cache DB...\n";
+    unlink $cache_db;
+    $db_clean = 1;
+}
+
+require GDBM_File;
+tie my %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
+
+# Regenerate the icon db if the GTKRC file has been modified
+if ($with_icons and !$db_clean) {
+    my $gtkrc_mtime = (stat $CONFIG{gtk_rc_filename})[9];
+
+    if (!exists($cache_db{__GTKRC_MTIME__})
+        or $cache_db{__GTKRC_MTIME__} != $gtkrc_mtime) {
+        print STDERR "** Regenerating the cache DB...\n";
+        untie %cache_db;
+        unlink $cache_db;
+        tie %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
+        $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
+    }
 }
 
 {
