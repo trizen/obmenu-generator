@@ -104,7 +104,7 @@ my $config_help = <<"HELP";
                             Example: [
                                 {key => 'Name',       re => qr/(?:about|terminal)/i},
                                 {key => 'Exec',       re => qr/^xterm/},
-                                {key => "OnlyShowIn", re => qr/XFCE/},
+                                {key => 'OnlyShowIn', re => qr/XFCE/},
                             ],
 
     | substitutions       : Substitute, by using a regex, in the values of the desktop files.
