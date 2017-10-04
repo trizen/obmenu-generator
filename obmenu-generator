@@ -97,13 +97,14 @@ my $config_help = <<"HELP";
 
 || FILTERING
     | skip_filename_re    : Skip a .desktop file if its name matches the regex.
-                            Name is from the last slash to the end. (filename.desktop)
+                            Name is from the last slash to the end. (e.g.: name.desktop)
                             Example: qr/^(?:gimp|xterm)\\b/,    # skips 'gimp' and 'xterm'
 
     | skip_entry          : Skip a desktop file if the value from a given key matches the regex.
                             Example: [
-                                {key => 'Name', re => qr/(?:about|terminal)/i},
-                                {key => 'Exec', re => qr/^xterm/},
+                                {key => 'Name',       re => qr/(?:about|terminal)/i},
+                                {key => 'Exec',       re => qr/^xterm/},
+                                {key => "OnlyShowIn", re => qr/XFCE/},
                             ],
 
     | substitutions       : Substitute, by using a regex, in the values of the desktop files.
