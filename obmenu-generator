@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 04 October 2017
+# Latest edit: 21 October 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -32,10 +32,10 @@ use 5.014;
 #use strict;
 #use warnings;
 
-require Linux::DesktopFiles;    # >= 0.09
+require Linux::DesktopFiles;    # >= 0.23
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.81';
+my $version = '0.82-alpha';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -109,8 +109,8 @@ my $config_help = <<"HELP";
 
     | substitutions       : Substitute, by using a regex, in the values of the desktop files.
                             Example: [
-                                {key => 'Exec', re => qr/xterm/, value => 'sakura'},
-                                {key => 'Exec', re => qr/\\\\\\\\/,  value => '\\\\', global => 1},    # for wine apps
+                                {key => 'Exec', re => qr/xterm/, value => 'sakura', global => 1},
+                                {key => 'Name', re => qr/^GNU I\w+ M\w+ P\w+/, value => 'GIMP'},
                             ],
 
 || ICON SETTINGS
@@ -119,10 +119,6 @@ my $config_help = <<"HELP";
     | icon_size           : Preferred size for icons. (default: 32)
     | generic_fallback    : Try to shorten icon name at '-' characters before looking at inherited themes. (default: 0)
     | force_icon_size     : Always get the icon scaled to the requested size. (default: 0)
-
-|| KEYS
-    | name_keys           : Valid keys for application name.
-                            Example: ['Name[fr]', 'GenericName[fr]', 'Name'],   # french menu
 
 || PATHS
     | desktop_files_paths   : Absolute paths which contain .desktop files.
@@ -242,7 +238,6 @@ my %CONFIG = (
 
     },
 
-    name_keys       => ['Name'],
     terminal        => 'xterm',
     editor          => 'geany',
     missing_icon    => 'gtk-missing-image',
@@ -310,8 +305,6 @@ else {
           warnings.pm
           warnings/register.pm
           Tie/Hash.pm
-          Carp.pm
-          Exporter.pm
           )
         } = ();
 }
@@ -321,8 +314,7 @@ my $desk_obj = Linux::DesktopFiles->new(
 
     categories => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
 
-    keys_to_keep => [@{$CONFIG{name_keys}},
-                     'Exec',
+    keys_to_keep => ['Name', 'Exec',
                      ($with_icons ? 'Icon' : ()),
                      (
                       defined($CONFIG{'Linux::DesktopFiles'}{skip_entry})
@@ -500,18 +492,36 @@ foreach my $file ($desk_obj->get_desktop_files) {
     my $cache_ok = (%info and $info{__MTIME__} == $mtime);
 
     if (not $cache_ok) {
-        $desk_obj->parse(\my %cats, $file);
+        my %entry = $desk_obj->parse_desktop_file($file);
 
-        %info = %cats ? (%{(values %cats)[0][0]}, __MTIME__ => $mtime) : do {
-            $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);
-            next;
+        %info = (
+            %entry
+            ? (
+               Name => $entry{Name},
+               Exec => $entry{Exec},
+
+               (
+                $with_icons
+                ? (Icon => check_icon($entry{Icon}))
+                : ()
+               ),
+
+               __CATEGORIES__ => join(';', @{$entry{Categories}}),
+               __MTIME__      => $mtime,
+              )
+            : do {
+                $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);
+                next;
+              }
+        );
+
+        eval {
+            require Encode;
+            require File::DesktopEntry;
+            my $fde = File::DesktopEntry->new($file);
+            $info{Name} = Encode::encode_utf8($fde->get('Name'));
         };
 
-        if ($with_icons) {
-            $info{Icon} = check_icon($info{Icon});
-        }
-
-        $info{__CATEGORIES__} = join(';', keys %cats);
         $cache_db{$file} = join("\0\1\0", %info);
     }
 
@@ -537,15 +547,8 @@ foreach my $schema (@$SCHEMA) {
                map [lc($_) => $_],
              map {
 
-                 my $name;
+                 my $name = $_->{Name};
                  my $exec = $_->{Exec};
-
-                 foreach my $key (@{$CONFIG{name_keys}}) {
-                     if ($_->{$key}) {
-                         $name = $_->{$key};
-                         last;
-                     }
-                 }
 
                  # encode the entities
                  $name =~ tr/"&_//
