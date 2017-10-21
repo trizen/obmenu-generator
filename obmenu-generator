@@ -32,10 +32,10 @@ use 5.014;
 #use strict;
 #use warnings;
 
-require Linux::DesktopFiles;    # >= 0.23
+require Linux::DesktopFiles;    # >= 0.24
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.82-alpha';
+my $version = '0.81';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -110,7 +110,7 @@ my $config_help = <<"HELP";
     | substitutions       : Substitute, by using a regex, in the values of the desktop files.
                             Example: [
                                 {key => 'Exec', re => qr/xterm/, value => 'sakura', global => 1},
-                                {key => 'Name', re => qr/^GNU I\w+ M\w+ P\w+/, value => 'GIMP'},
+                                {key => 'Name', re => qr/^GNU I\\w+ M\\w+ P\\w+/, value => 'GIMP'},
                             ],
 
 || ICON SETTINGS
@@ -134,6 +134,8 @@ my $config_help = <<"HELP";
         * use qr/.../i for case insensitive mode
 HELP
 
+my $db_clean = 0;
+
 if (@ARGV) {
     while (defined(my $arg = shift @ARGV)) {
         if ($arg eq '-i') {
@@ -149,6 +151,7 @@ if (@ARGV) {
             $static = 1;
         }
         elsif ($arg eq '-d') {
+            $db_clean = 1;
             unlink $cache_db;
         }
         elsif ($arg eq '-u') {
@@ -432,10 +435,8 @@ sub get_icon_path {
     return '';
 }
 
-my $db_clean = 0;
-
 # Regenerate the cache db if the config or schema file has been modified
-if ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file)) {
+if (!$db_clean and ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file))) {
     print STDERR "** Regenerating the cache DB...\n";
     unlink $cache_db;
     $db_clean = 1;
@@ -506,8 +507,8 @@ foreach my $file ($desk_obj->get_desktop_files) {
                 : ()
                ),
 
-               __CATEGORIES__ => join(';', @{$entry{Categories}}) || $CONFIG{'Linux::DesktopFiles'}{unknown_category_key},
-               __MTIME__ => $mtime,
+               __CATEGORIES__ => join(';', @{$entry{Categories}}),
+               __MTIME__      => $mtime,
               )
             : do {
                 $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);

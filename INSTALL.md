@@ -5,7 +5,10 @@
     - perl>=5.14.0
     - gtk2-perl ([Gtk2](https://metacpan.org/pod/Gtk2))
     - perl-data-dump ([Data::Dump](https://metacpan.org/pod/Data::Dump))
-    - perl-linux-desktopfiles>=0.09 ([Linux::DesktopFiles](https://metacpan.org/pod/Linux::DesktopFiles))
+    - perl-linux-desktopfiles>=0.24 ([Linux::DesktopFiles](https://metacpan.org/pod/Linux::DesktopFiles))
+
+* Optional dependencies:
+    - perl-file-desktopentry ([File::DesktopEntry](https://metacpan.org/pod/File::DesktopEntry))
 
 ### Installation process:
 
@@ -16,6 +19,10 @@
 
 - to generate a dynamic menu with icons, execute: `obmenu-generator -i -p`
 - to generate a static menu without icons, execute: `obmenu-generator -s -c`
+
+### Locale support:
+
+- If [File::DesktopEntry](https://metacpan.org/pod/File::DesktopEntry) is installed, `obmenu-generator` will use it to provide locale support.
 
 ### Customizing:
 
