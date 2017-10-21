@@ -506,8 +506,8 @@ foreach my $file ($desk_obj->get_desktop_files) {
                 : ()
                ),
 
-               __CATEGORIES__ => join(';', @{$entry{Categories}}),
-               __MTIME__      => $mtime,
+               __CATEGORIES__ => join(';', @{$entry{Categories}}) || $CONFIG{'Linux::DesktopFiles'}{unknown_category_key},
+               __MTIME__ => $mtime,
               )
             : do {
                 $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);
