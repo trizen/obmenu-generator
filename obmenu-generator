@@ -283,8 +283,8 @@ my @valid_keys = grep exists $CONFIG{$_}, keys %$CONFIG;
 @CONFIG{@valid_keys} = @{$CONFIG}{@valid_keys};
 
 if ($CONFIG{VERSION} != $version) {
-    $update_config = 1;
     $CONFIG{VERSION} = $version;
+    dump_configuration();
 }
 
 #
@@ -518,6 +518,18 @@ foreach my $file ($desk_obj->get_desktop_files) {
             $info{Name} = Encode::encode_utf8($fde->get('Name'));
         };
 
+        state $entities = {
+                           '&' => '&amp;',
+                           '"' => '&quot;',
+                           '_' => '__',
+                           '<' => '&lt;',
+                           '>' => '&gt;',
+                          };
+
+        # Encode XML entities (if any)
+        $info{Name} =~ tr/"&_<>//
+          && $info{Name} =~ s/([&"_<>])/$entities->{$1}/g;
+
         $cache_db{$file} = join("\0\1\0", %info);
     }
 
@@ -525,14 +537,6 @@ foreach my $file ($desk_obj->get_desktop_files) {
         push @{$categories{$category}}, \%info;
     }
 }
-
-my %entities = (
-                '&' => '&amp;',
-                '"' => '&quot;',
-                '_' => '__',
-                '<' => '&lt;',
-                '>' => '&gt;',
-               );
 
 foreach my $schema (@$SCHEMA) {
     if (exists $schema->{cat}) {
@@ -544,21 +548,13 @@ foreach my $schema (@$SCHEMA) {
              sort { $a->[0] cmp $b->[0] }
                map [lc($_) => $_],
              map {
-
-                 my $name = $_->{Name};
-
-                 # Encode XML entities (if any)
-                 $name =~ tr/"&_<>//
-                   && $name =~ s/([&"_<>])/$entities{$1}/g;
-
                  $with_icons
                    ? <<"ITEM_WITH_ICON"
-    <item label="$name" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
+    <item label="$_->{Name}" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM_WITH_ICON
                    : <<"ITEM";
-    <item label="$name"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
+    <item label="$_->{Name}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM
-
                } @{$categories{$category}}
             )
           )
