@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 21 October 2017
+# Latest edit: 22 October 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -32,7 +32,7 @@ use 5.014;
 #use strict;
 #use warnings;
 
-require Linux::DesktopFiles;    # >= 0.24
+require Linux::DesktopFiles;    # >= 0.25
 
 my $pkgname = 'obmenu-generator';
 my $version = '0.81';
@@ -493,28 +493,27 @@ foreach my $file ($desk_obj->get_desktop_files) {
     my $cache_ok = (%info and $info{__MTIME__} == $mtime);
 
     if (not $cache_ok) {
-        my %entry = $desk_obj->parse_desktop_file($file);
 
+        my $entry = $desk_obj->parse_desktop_file($file) // do {
+            $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);
+            next;
+        };
+
+#<<<
         %info = (
-            %entry
-            ? (
-               Name => $entry{Name},
-               Exec => $entry{Exec},
+            Name => $entry->{Name},
+            Exec => $entry->{Exec},
 
-               (
-                $with_icons
-                ? (Icon => check_icon($entry{Icon}))
-                : ()
-               ),
+            (
+             $with_icons
+             ? (Icon => check_icon($entry->{Icon}))
+             : ()
+            ),
 
-               __CATEGORIES__ => join(';', @{$entry{Categories}}),
-               __MTIME__      => $mtime,
-              )
-            : do {
-                $cache_db{$file} = join("\0\1\0", __IGNORE__ => 1);
-                next;
-              }
+            __CATEGORIES__ => join(';', @{$entry->{Categories}}),
+            __MTIME__      => $mtime,
         );
+#>>>
 
         eval {
             require Encode;
