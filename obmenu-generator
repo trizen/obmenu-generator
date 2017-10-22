@@ -530,6 +530,8 @@ my %entities = (
                 '&' => '&amp;',
                 '"' => '&quot;',
                 '_' => '__',
+                '<' => '&lt;',
+                '>' => '&gt;',
                );
 
 foreach my $schema (@$SCHEMA) {
@@ -545,9 +547,9 @@ foreach my $schema (@$SCHEMA) {
 
                  my $name = $_->{Name};
 
-                 # encode the entities
-                 $name =~ tr/"&_//
-                   && $name =~ s/([&"_])/$entities{$1}/g;
+                 # Encode XML entities (if any)
+                 $name =~ tr/"&_<>//
+                   && $name =~ s/([&"_<>])/$entities{$1}/g;
 
                  $with_icons
                    ? <<"ITEM_WITH_ICON"
