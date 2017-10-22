@@ -40,7 +40,7 @@ my $version = '0.81';
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
 
-my ($pipe, $static, $with_icons, $reconfigure, $update_config, $reconf_openbox);
+my ($pipe, $static, $with_icons, $db_clean, $reconfigure, $update_config, $reconf_openbox);
 
 my $home_dir =
      $ENV{HOME}
@@ -133,8 +133,6 @@ my $config_help = <<"HELP";
         * use qr/.../ instead of '...'
         * use qr/.../i for case insensitive mode
 HELP
-
-my $db_clean = 0;
 
 if (@ARGV) {
     while (defined(my $arg = shift @ARGV)) {
@@ -315,20 +313,18 @@ else {
 my $desk_obj = Linux::DesktopFiles->new(
     %{$CONFIG{'Linux::DesktopFiles'}},
 
-    categories => [map $_->{cat}[0], grep exists $_->{cat}, @$SCHEMA],
+    categories => [map { exists($_->{cat}) ? $_->{cat}[0] : () } @$SCHEMA],
 
     keys_to_keep => ['Name', 'Exec',
                      ($with_icons ? 'Icon' : ()),
                      (
-                      defined($CONFIG{'Linux::DesktopFiles'}{skip_entry})
-                        && ref($CONFIG{'Linux::DesktopFiles'}{skip_entry}) eq 'ARRAY'
+                      ref($CONFIG{'Linux::DesktopFiles'}{skip_entry}) eq 'ARRAY'
                       ? (map { $_->{key} } @{$CONFIG{'Linux::DesktopFiles'}{skip_entry}})
                       : ()
                      ),
                     ],
 
-    terminal => $CONFIG{terminal},
-
+    terminal              => $CONFIG{terminal},
     case_insensitive_cats => 1,
                                        );
 
@@ -372,7 +368,7 @@ PIPE_MENU_HEADER
         close $fh;
 
         print STDERR <<'EOT';
-** A dynamic menu has been successfully generated!
+[*] A dynamic menu has been successfully generated!
 EOT
 
         exec 'openbox', '--reconfigure';
@@ -437,7 +433,7 @@ sub get_icon_path {
 
 # Regenerate the cache db if the config or schema file has been modified
 if (!$db_clean and ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file))) {
-    print STDERR "** Regenerating the cache DB...\n";
+    print STDERR "[*] Regenerating the cache DB...\n";
     unlink $cache_db;
     $db_clean = 1;
 }
@@ -453,7 +449,7 @@ if ($with_icons) {
         $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
     }
     elsif (!exists($cache_db{__GTKRC_MTIME__}) or $cache_db{__GTKRC_MTIME__} != $gtkrc_mtime) {
-        print STDERR "** Regenerating the cache DB...\n";
+        print STDERR "[*] Regenerating the cache DB...\n";
         untie %cache_db;
         unlink $cache_db;
         tie %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
@@ -548,7 +544,6 @@ foreach my $schema (@$SCHEMA) {
              map {
 
                  my $name = $_->{Name};
-                 my $exec = $_->{Exec};
 
                  # encode the entities
                  $name =~ tr/"&_//
@@ -556,10 +551,10 @@ foreach my $schema (@$SCHEMA) {
 
                  $with_icons
                    ? <<"ITEM_WITH_ICON"
-    <item label="$name" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$exec]]></command></action></item>
+    <item label="$name" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM_WITH_ICON
                    : <<"ITEM";
-    <item label="$name"><action name="Execute"><command><![CDATA[$exec]]></command></action></item>
+    <item label="$name"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM
 
                } @{$categories{$category}}
@@ -685,7 +680,7 @@ dump_configuration() if $update_config;
 
 if ($static) {
     print STDERR <<'EOT';
-** A static menu has been successfully generated!
+[*] A static menu has been successfully generated!
 EOT
     if ($reconf_openbox) {
         exec 'openbox', '--reconfigure';
