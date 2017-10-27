@@ -116,7 +116,7 @@ my $config_help = <<"HELP";
 || ICON SETTINGS
     | gtk_rc_filename     : Absolute path to the GTK configuration file.
     | missing_icon        : Use this icon for missing icons (default: gtk-missing-image)
-    | icon_size           : Preferred size for icons. (default: 32)
+    | icon_size           : Preferred size for icons. (default: 48)
     | generic_fallback    : Try to shorten icon name at '-' characters before looking at inherited themes. (default: 0)
     | force_icon_size     : Always get the icon scaled to the requested size. (default: 0)
 
@@ -244,7 +244,7 @@ my %CONFIG = (
     missing_icon    => 'gtk-missing-image',
     gtk_rc_filename => "$home_dir/.gtkrc-2.0",
 
-    icon_size        => 32,
+    icon_size        => 48,
     force_icon_size  => 0,
     generic_fallback => 0,
 
