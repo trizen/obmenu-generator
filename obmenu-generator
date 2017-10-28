@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 22 October 2017
+# Latest edit: 28 October 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -32,10 +32,10 @@ use 5.014;
 #use strict;
 #use warnings;
 
-require Linux::DesktopFiles;    # >= 0.25
+use Linux::DesktopFiles 0.25;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.82';
+my $version = '0.83';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
