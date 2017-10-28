@@ -290,26 +290,15 @@ if ($CONFIG{VERSION} != $version) {
 #
 ## Remove the overhead of loading some unneeded modules.
 #
-if ($with_icons) {
-    @INC{
-        qw(
-          strict.pm
-          warnings.pm
-          warnings/register.pm
-          )
-        } = ();
-}
-else {
-    @INC{
-        qw(
-          strict.pm
-          warnings.pm
-          warnings/register.pm
-          Tie/Hash.pm
-          Carp.pm
-          )
-        } = ();
-}
+@INC{
+    qw(
+      Carp.pm
+      strict.pm
+      Tie/Hash.pm
+      warnings.pm
+      warnings/register.pm
+      )
+    } = ();
 
 my $desk_obj = Linux::DesktopFiles->new(
     %{$CONFIG{'Linux::DesktopFiles'}},
@@ -390,6 +379,8 @@ sub get_icon_path {
     my ($name) = @_;
 
     state $gtk = do {
+        delete $INC{'Carp.pm'};
+        delete $INC{'Tie/Hash.pm'};
         require Gtk2;
         require Digest::MD5;
         'Gtk2'->init;
