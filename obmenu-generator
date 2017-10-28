@@ -306,6 +306,7 @@ else {
           warnings.pm
           warnings/register.pm
           Tie/Hash.pm
+          Carp.pm
           )
         } = ();
 }
@@ -512,8 +513,11 @@ foreach my $file ($desk_obj->get_desktop_files) {
 #>>>
 
         eval {
-            require Encode;
-            require File::DesktopEntry;
+            state $x = do {
+                delete $INC{'Carp.pm'};
+                require Encode;
+                require File::DesktopEntry;
+            };
             my $fde = File::DesktopEntry->new($file);
             $info{Name} = Encode::encode_utf8($fde->get('Name'));
         };
