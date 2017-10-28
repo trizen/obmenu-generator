@@ -294,6 +294,7 @@ if ($CONFIG{VERSION} != $version) {
     qw(
       Carp.pm
       strict.pm
+      Exporter.pm
       Tie/Hash.pm
       warnings.pm
       warnings/register.pm
@@ -379,6 +380,7 @@ sub get_icon_path {
     my ($name) = @_;
 
     state $gtk = do {
+        delete $INC{'Exporter.pm'};
         delete $INC{'Carp.pm'};
         delete $INC{'Tie/Hash.pm'};
         require Gtk2;
@@ -505,6 +507,7 @@ foreach my $file ($desk_obj->get_desktop_files) {
 
         eval {
             state $x = do {
+                delete $INC{'Exporter.pm'};
                 delete $INC{'Carp.pm'};
                 require Encode;
                 require File::DesktopEntry;
