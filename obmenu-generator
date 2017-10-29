@@ -40,7 +40,7 @@ my $version = '0.83';
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
 
-my ($pipe, $static, $with_icons, $db_clean, $reconfigure, $update_config, $reconf_openbox);
+my ($pipe, $static, $with_icons, $reload_config, $db_clean, $reconfigure, $update_config, $reconf_openbox);
 
 my $home_dir =
      $ENV{HOME}
@@ -72,9 +72,9 @@ menu:
     -t <label> : menu label text (default: 'Applications')
 
 other:
-    -S <file>  : path to the schema.pl file
-    -C <file>  : path to the config.pl file
-    -o <file>  : path to the menu.xml file
+    -S <file>  : absolute path to the schema.pl file
+    -C <file>  : absolute path to the config.pl file
+    -o <file>  : absolute path to the menu.xml file
     -u         : update the config file
     -r         : regenerate the config file
     -d         : regenerate the cache file
@@ -169,6 +169,7 @@ if (@ARGV) {
             $schema_file = shift(@ARGV) // die "$0: option '-S' requires an argument!\n";
         }
         elsif ($arg eq '-C') {
+            $reload_config = 1;
             $config_file = shift(@ARGV) // die "$0: options '-C' requires an argument!\n";
         }
         elsif ($arg eq '-o') {
@@ -277,7 +278,9 @@ if (not -e $schema_file) {
     }
 }
 
-require $schema_file;    # Load the configuration files
+# Load the configuration files
+require $schema_file;
+require $config_file if $reload_config;
 
 # Remove invalid user-defined keys
 my @valid_keys = grep exists $CONFIG{$_}, keys %$CONFIG;
