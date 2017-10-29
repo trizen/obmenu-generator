@@ -247,6 +247,7 @@ my %CONFIG = (
     icon_size        => 48,
     force_icon_size  => 0,
     generic_fallback => 0,
+    locale_support   => 1,
 
     VERSION => $version,
              );
@@ -380,9 +381,9 @@ sub get_icon_path {
     my ($name) = @_;
 
     state $gtk = do {
-        delete $INC{'Exporter.pm'};
-        delete $INC{'Carp.pm'};
-        delete $INC{'Tie/Hash.pm'};
+        delete $INC{'Exporter.pm'} if !defined($INC{'Exporter.pm'});
+        delete $INC{'Carp.pm'}     if !defined($INC{'Carp.pm'});
+        delete $INC{'Tie/Hash.pm'} if !defined($INC{'Tie/Hash.pm'});
         require Gtk2;
         require Digest::MD5;
         'Gtk2'->init;
@@ -507,14 +508,14 @@ foreach my $file ($desk_obj->get_desktop_files) {
 
         eval {
             state $x = do {
-                delete $INC{'Exporter.pm'};
-                delete $INC{'Carp.pm'};
+                delete $INC{'Exporter.pm'} if !defined($INC{'Exporter.pm'});
+                delete $INC{'Carp.pm'}     if !defined($INC{'Carp.pm'});
                 require Encode;
                 require File::DesktopEntry;
             };
             my $fde = File::DesktopEntry->new($file);
             $info{Name} = Encode::encode_utf8($fde->get('Name'));
-        };
+        } if $CONFIG{locale_support};
 
         state $entities = {
                            '&' => '&amp;',
