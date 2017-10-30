@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 28 October 2017
+# Latest edit: 30 October 2017
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -35,7 +35,7 @@ use 5.014;
 use Linux::DesktopFiles 0.25;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.83';
+my $version = '0.84';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -107,10 +107,9 @@ my $config_help = <<"HELP";
                                 {key => 'OnlyShowIn', re => qr/XFCE/},
                             ],
 
-    | substitutions       : Substitute, by using a regex, in the values of the desktop files.
+    | substitutions       : Substitute, by using a regex, in the values from the desktop files.
                             Example: [
                                 {key => 'Exec', re => qr/xterm/, value => 'sakura', global => 1},
-                                {key => 'Name', re => qr/^GNU I\\w+ M\\w+ P\\w+/, value => 'GIMP'},
                             ],
 
 || ICON SETTINGS
@@ -271,7 +270,7 @@ if (not -e $schema_file) {
     if (-e (my $etc_schema_file = "/etc/xdg/$pkgname/schema.pl")) {
         require File::Copy;
         File::Copy::copy($etc_schema_file, $schema_file)
-          or die "$0: can't copy file `$etc_schema_file' to `$schema_file': $!\n";
+          or warn "$0: can't copy file `$etc_schema_file' to `$schema_file': $!\n";
     }
     else {
         die "$0: schema file `$schema_file' does not exists!\n";
@@ -384,11 +383,14 @@ sub get_icon_path {
     my ($name) = @_;
 
     state $gtk = do {
-        delete $INC{'Exporter.pm'} if !defined($INC{'Exporter.pm'});
-        delete $INC{'Carp.pm'}     if !defined($INC{'Carp.pm'});
-        delete $INC{'Tie/Hash.pm'} if !defined($INC{'Tie/Hash.pm'});
+
+        delete($INC{'Exporter.pm'}) if !defined($INC{'Exporter.pm'});
+        delete($INC{'Carp.pm'})     if !defined($INC{'Carp.pm'});
+        delete($INC{'Tie/Hash.pm'}) if !defined($INC{'Tie/Hash.pm'});
+
         require Gtk2;
         require Digest::MD5;
+
         'Gtk2'->init;
         'Gtk2';
     };
@@ -510,14 +512,18 @@ foreach my $file ($desk_obj->get_desktop_files) {
 #>>>
 
         eval {
+
             state $x = do {
-                delete $INC{'Exporter.pm'} if !defined($INC{'Exporter.pm'});
-                delete $INC{'Carp.pm'}     if !defined($INC{'Carp.pm'});
+
+                delete($INC{'Exporter.pm'}) if !defined($INC{'Exporter.pm'});
+                delete($INC{'Carp.pm'})     if !defined($INC{'Carp.pm'});
+
                 require Encode;
                 require File::DesktopEntry;
             };
-            my $fde = File::DesktopEntry->new($file);
-            $info{Name} = Encode::encode_utf8($fde->get('Name'));
+
+            $info{Name} = Encode::encode_utf8(File::DesktopEntry->new($file)->get('Name'));
+
         } if $CONFIG{locale_support};
 
         state $entities = {
