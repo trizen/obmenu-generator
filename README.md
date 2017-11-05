@@ -3,6 +3,8 @@ obmenu-generator
 
 A fast pipe/static menu generator for the Openbox Window Manager, with support for icons.
 
+![obmenu-generator](https://4.bp.blogspot.com/-7gD5UA2gno0/WcO6o1NGQWI/AAAAAAAAmxc/JtAnLNCyVcANz29zMmpKzywY6pk9NYiUwCLcBGAs/s1600/2017-09-21-161043_1920x1080_scrot.png)
+
 ---
 
 ```
