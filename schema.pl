@@ -50,7 +50,7 @@ our $SCHEMA = [
     {cat => ['settings',    'Settings',    'applications-accessories']},
     {cat => ['system',      'System',      'applications-system']},
 
-    #                  LABEL          ICON
+    #             LABEL          ICON
     #{beg => ['My category',  'cat-icon']},
     #          ... some items ...
     #{end => undef},
