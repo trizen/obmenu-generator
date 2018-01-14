@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2011-2017 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+# Copyright (C) 2010-2018 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 # Openbox Menu Generator
 # A fast menu generator for the Openbox Window Manager, with support for icons.
@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 30 October 2017
+# Latest edit: 14 January 2018
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -412,10 +412,10 @@ sub get_icon_path {
 
 #<<<
         my $pixbuf = eval {
-            (substr($name, 0, 1) eq '/')
-            ? (substr($name, -4) eq '.xpm')
-                ? "${gtk}::Gdk::Pixbuf"->new_from_file($name)->scale_simple($CONFIG{icon_size}, $CONFIG{icon_size}, 'hyper')
-                : "${gtk}::Gdk::Pixbuf"->new_from_file_at_size($name, $CONFIG{icon_size}, $CONFIG{icon_size})
+            (substr($icon_name, 0, 1) eq '/')
+            ? (substr($icon_name, -4) eq '.xpm')
+                ? "${gtk}::Gdk::Pixbuf"->new_from_file($icon_name)->scale_simple($CONFIG{icon_size}, $CONFIG{icon_size}, 'hyper')
+                : "${gtk}::Gdk::Pixbuf"->new_from_file_at_size($icon_name, $CONFIG{icon_size}, $CONFIG{icon_size})
             : $theme->load_icon($icon_name, $CONFIG{icon_size}, $flags);
         };
 #>>>
