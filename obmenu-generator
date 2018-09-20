@@ -109,7 +109,7 @@ my $config_help = <<"HELP";
 
     | substitutions       : Substitute, by using a regex, in the values from the desktop files.
                             Example: [
-                                {key => 'Exec', re => qr/xterm/, value => 'sakura', global => 1},
+                                {key => 'Exec', re => qr/xterm/, value => 'tilix', global => 1},
                             ],
 
 || ICON SETTINGS
@@ -588,14 +588,12 @@ ITEM
         $generated_menu .= begin_category(@{$schema->{beg}});
     }
     elsif (exists $schema->{begin_cat}) {
-        warn "[WARNING] <<begin_cat>> is deprecated: use <<beg>> instead!\n";
         $generated_menu .= begin_category(@{$schema->{begin_cat}});
     }
     elsif (exists $schema->{end}) {
         $generated_menu .= qq[  </menu>\n];
     }
     elsif (exists $schema->{end_cat}) {
-        warn "[WARNING] <<end_cat>> is deprecated: use <<end>> instead!\n";
         $generated_menu .= qq[  </menu>\n];
     }
     elsif (exists $schema->{exit}) {
