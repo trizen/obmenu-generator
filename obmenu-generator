@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2010-2018 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
+# Copyright (C) 2010-2019 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 30 September 2018
+# Latest edit: 13 January 2019
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -169,7 +169,7 @@ if (@ARGV) {
         }
         elsif ($arg eq '-C') {
             $reload_config = 1;
-            $config_file = shift(@ARGV) // die "$0: options '-C' requires an argument!\n";
+            $config_file   = shift(@ARGV) // die "$0: options '-C' requires an argument!\n";
         }
         elsif ($arg eq '-o') {
             $menufile = shift(@ARGV) // die "$0: option '-o' requires an argument!\n";
@@ -470,7 +470,7 @@ sub begin_category {
       ? <<"MENU_WITH_ICON"
   <menu id="${\rand()}" icon="${\check_icon($_[1])}" label="$_[0]">
 MENU_WITH_ICON
-      : <<"MENU"
+      : <<"MENU";
   <menu id="${\rand()}" label="$_[0]">
 MENU
 }
@@ -485,7 +485,7 @@ foreach my $file ($desk_obj->get_desktop_files) {
 
     next if exists $info{__IGNORE__};
 
-    my $mtime = (stat $file)[9];
+    my $mtime    = (stat $file)[9];
     my $cache_ok = (%info and $info{__MTIME__} == $mtime);
 
     if (not $cache_ok) {
@@ -522,7 +522,7 @@ foreach my $file ($desk_obj->get_desktop_files) {
                 require File::DesktopEntry;
             };
 
-            $info{Name} = Encode::encode_utf8(File::DesktopEntry->new($file)->get('Name'));
+            $info{Name} = Encode::encode_utf8(File::DesktopEntry->new($file)->get('Name') // '');
 
         } if $CONFIG{locale_support};
 
@@ -563,7 +563,7 @@ ITEM_WITH_ICON
                    : <<"ITEM";
     <item label="$_->{Name}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM
-               } @{$categories{$category}}
+             } @{$categories{$category}}
             )
           )
           . qq[  </menu>\n];
