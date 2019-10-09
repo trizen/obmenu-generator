@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 13 January 2019
+# Latest edit: 10 October 2019
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -478,10 +478,7 @@ MENU
 my %categories;
 foreach my $file ($desk_obj->get_desktop_files) {
 
-    my %info;
-    if (exists $cache_db{$file}) {
-        %info = split("\0\1\0", $cache_db{$file}, -1);
-    }
+    my %info = split("\0\1\0", $cache_db{$file} // '', -1);
 
     next if exists $info{__IGNORE__};
 
