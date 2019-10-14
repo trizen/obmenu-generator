@@ -388,11 +388,11 @@ sub get_icon_path {
         delete($INC{'Carp.pm'})     if !defined($INC{'Carp.pm'});
         delete($INC{'Tie/Hash.pm'}) if !defined($INC{'Tie/Hash.pm'});
 
-        require Gtk2;
+        use Gtk;
         require Digest::MD5;
 
-        'Gtk2'->init;
-        'Gtk2';
+        'Gtk3'->init;
+        'Gtk3';
     };
 
     state $theme = do {
