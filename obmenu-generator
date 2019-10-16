@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 10 October 2019
+# Latest edit: 16 October 2019
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -35,7 +35,7 @@ use 5.014;
 use Linux::DesktopFiles 0.25;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.85';
+my $version = '0.86';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -248,6 +248,7 @@ my %CONFIG = (
     force_icon_size  => 0,
     generic_fallback => 0,
     locale_support   => 1,
+    use_gtk3         => 0,
 
     VERSION => $version,
              );
@@ -388,16 +389,25 @@ sub get_icon_path {
         delete($INC{'Carp.pm'})     if !defined($INC{'Carp.pm'});
         delete($INC{'Tie/Hash.pm'}) if !defined($INC{'Tie/Hash.pm'});
 
-        require Gtk2;
         require Digest::MD5;
 
-        'Gtk2'->init;
-        'Gtk2';
+        $CONFIG{use_gtk3}
+          ? do {
+            eval "use Gtk3";
+            'Gtk3'->init;
+            'Gtk3';
+          }
+          : do {
+            require Gtk2;
+            'Gtk2'->init;
+            'Gtk2';
+          };
     };
 
-    state $theme = do {
-        "${gtk}::IconTheme"->get_default;
-    };
+    state $theme =
+      ($gtk eq 'Gtk2')
+      ? Gtk2::IconTheme->get_default
+      : Gtk3::IconTheme::get_default();
 
 #<<<
     state $flags = "${gtk}::IconLookupFlags"->new(
