@@ -113,6 +113,7 @@ my $config_help = <<"HELP";
                             ],
 
 || ICON SETTINGS
+    | use_gtk3            : Use the Gtk3 library for resolving the icon-paths. (default: 0)
     | gtk_rc_filename     : Absolute path to the GTK configuration file.
     | missing_icon        : Use this icon for missing icons (default: gtk-missing-image)
     | icon_size           : Preferred size for icons. (default: 48)
@@ -458,12 +459,15 @@ if ($with_icons) {
     if ($db_clean) {
         $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
     }
-    elsif (!exists($cache_db{__GTKRC_MTIME__}) or $cache_db{__GTKRC_MTIME__} != $gtkrc_mtime) {
-        print STDERR "[*] Regenerating the cache DB...\n";
-        untie %cache_db;
-        unlink $cache_db;
-        tie %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
-        $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
+    else {
+        my $old_mtime = $cache_db{__GTKRC_MTIME__} // -1;
+        if ($old_mtime != $gtkrc_mtime) {
+            print STDERR "[*] Regenerating the cache DB...\n";
+            untie %cache_db;
+            unlink $cache_db;
+            tie %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
+            $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
+        }
     }
 }
 
