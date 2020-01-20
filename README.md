@@ -17,15 +17,16 @@ menu:
     -m <id>    : menu id (default: 'root-menu')
     -t <label> : menu label text (default: 'Applications')
 
-other:
-    -S <file>  : path to the schema.pl file
-    -C <file>  : path to the config.pl file
-    -o <file>  : path to the menu.xml file
+misc:
     -u         : update the config file
-    -r         : regenerate the config file
-    -d         : regenerate icons.db
+    -d         : regenerate the cache file
     -c         : reconfigure openbox automatically
     -R         : reconfigure openbox and exit
+    -S <file>  : absolute path to the schema.pl file
+    -C <file>  : absolute path to the config.pl file
+    -o <file>  : absolute path to the menu.xml file
+
+info:
     -h         : print this message and exit
     -v         : print version and exit
 

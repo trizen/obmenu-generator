@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2010-2019 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
+# Copyright (C) 2010-2020 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 16 October 2019
+# Latest edit: 20 January 2020
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -40,7 +40,7 @@ my $version = '0.86';
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
 
-my ($pipe, $static, $with_icons, $reload_config, $db_clean, $reconfigure, $update_config, $reconf_openbox);
+my ($pipe, $static, $with_icons, $reload_config, $db_clean, $update_config, $reconf_openbox);
 
 my $home_dir =
      $ENV{HOME}
@@ -71,15 +71,16 @@ menu:
     -m <id>    : menu id (default: 'root-menu')
     -t <label> : menu label text (default: 'Applications')
 
-other:
-    -S <file>  : absolute path to the schema.pl file
-    -C <file>  : absolute path to the config.pl file
-    -o <file>  : absolute path to the menu.xml file
+misc:
     -u         : update the config file
-    -r         : regenerate the config file
     -d         : regenerate the cache file
     -c         : reconfigure openbox automatically
     -R         : reconfigure openbox and exit
+    -S <file>  : absolute path to the schema.pl file
+    -C <file>  : absolute path to the config.pl file
+    -o <file>  : absolute path to the menu.xml file
+
+info:
     -h         : print this message and exit
     -v         : print version and exit
 
@@ -141,9 +142,6 @@ if (@ARGV) {
         }
         elsif ($arg eq '-p') {
             $pipe = 1;
-        }
-        elsif ($arg eq '-r') {
-            $reconfigure = 1;
         }
         elsif ($arg eq '-s') {
             $static = 1;
@@ -264,7 +262,7 @@ sub dump_configuration {
     close $config_fh;
 }
 
-if (not -e $config_file or $reconfigure) {
+if (not -e $config_file) {
     dump_configuration();
 }
 
