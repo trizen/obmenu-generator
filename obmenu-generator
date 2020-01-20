@@ -497,6 +497,10 @@ foreach my $file ($desk_obj->get_desktop_files) {
     my $mtime    = (stat $file)[9];
     my $cache_ok = (%info and $info{__MTIME__} == $mtime);
 
+    if ($with_icons and $cache_ok and not exists $info{Icon}) {
+        $cache_ok = 0;
+    }
+
     if (not $cache_ok) {
 
         my $entry = $desk_obj->parse_desktop_file($file) // do {
