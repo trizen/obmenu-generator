@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 20 January 2020
+# Latest edit: 20 May 2020
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -135,6 +135,14 @@ my $config_help = <<"HELP";
         * use qr/.../i for case insensitive mode
 HELP
 
+sub remove_database {
+    my ($db) = @_;
+
+    foreach my $file ($db, "$db.dir", "$db.pag") {
+        unlink($file) if (-e $file);
+    }
+}
+
 if (@ARGV) {
     while (defined(my $arg = shift @ARGV)) {
         if ($arg eq '-i') {
@@ -148,7 +156,7 @@ if (@ARGV) {
         }
         elsif ($arg eq '-d') {
             $db_clean = 1;
-            unlink $cache_db;
+            remove_database($cache_db);
         }
         elsif ($arg eq '-u') {
             $update_config = 1;
@@ -195,7 +203,7 @@ if (not -d $config_dir) {
 }
 
 if ($with_icons and not -d $icons_dir) {
-    unlink($cache_db);
+    remove_database($cache_db);
     require File::Path;
     File::Path::make_path($icons_dir)
       or warn "$0: can't create icon path `$icons_dir': $!\n";
@@ -362,7 +370,7 @@ PIPE_MENU_HEADER
         close $fh;
 
         print STDERR <<'EOT';
-[*] A dynamic menu has been successfully generated!
+:: A dynamic menu has been successfully generated!
 EOT
 
         exec 'openbox', '--reconfigure';
@@ -442,13 +450,15 @@ sub get_icon_path {
 
 # Regenerate the cache db if the config or schema file has been modified
 if (!$db_clean and ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_file))) {
-    print STDERR "[*] Regenerating the cache DB...\n";
-    unlink $cache_db;
+    print STDERR ":: Regenerating the cache DB...\n";
+    remove_database($cache_db);
     $db_clean = 1;
 }
 
-require GDBM_File;
-tie my %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
+eval { require GDBM_File };
+
+dbmopen(my %cache_db, $cache_db, 0777)
+  or die "Can't create/access database <<$cache_db>>: $!";
 
 # Regenerate the icon db if the GTKRC file has been modified
 if ($with_icons) {
@@ -460,10 +470,14 @@ if ($with_icons) {
     else {
         my $old_mtime = $cache_db{__GTKRC_MTIME__} // -1;
         if ($old_mtime != $gtkrc_mtime) {
-            print STDERR "[*] Regenerating the cache DB...\n";
-            untie %cache_db;
-            unlink $cache_db;
-            tie %cache_db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
+            print STDERR ":: Regenerating the cache DB...\n";
+
+            dbmclose(%cache_db);
+            remove_database($cache_db);
+
+            dbmopen(my %cache_db, $cache_db, 0777)
+              or die "Can't create database <<$cache_db>>: $!";
+
             $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
         }
     }
@@ -697,7 +711,7 @@ dump_configuration() if $update_config;
 
 if ($static) {
     print STDERR <<'EOT';
-[*] A static menu has been successfully generated!
+:: A static menu has been successfully generated!
 EOT
     if ($reconf_openbox) {
         exec 'openbox', '--reconfigure';
