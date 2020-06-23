@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 20 May 2020
+# Latest edit: 23 June 2020
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -32,7 +32,7 @@ use 5.014;
 #use strict;
 #use warnings;
 
-use Linux::DesktopFiles 0.25;
+use Linux::DesktopFiles;
 
 my $pkgname = 'obmenu-generator';
 my $version = '0.87';
@@ -298,20 +298,6 @@ if ($CONFIG{VERSION} != $version) {
     dump_configuration();
 }
 
-#
-## Remove the overhead of loading some unneeded modules.
-#
-@INC{
-    qw(
-      Carp.pm
-      strict.pm
-      Exporter.pm
-      Tie/Hash.pm
-      warnings.pm
-      warnings/register.pm
-      )
-    } = ();
-
 my $desk_obj = Linux::DesktopFiles->new(
     %{$CONFIG{'Linux::DesktopFiles'}},
 
@@ -391,10 +377,6 @@ sub get_icon_path {
     my ($name) = @_;
 
     state $gtk = do {
-
-        delete($INC{'Exporter.pm'}) if !defined($INC{'Exporter.pm'});
-        delete($INC{'Carp.pm'})     if !defined($INC{'Carp.pm'});
-        delete($INC{'Tie/Hash.pm'}) if !defined($INC{'Tie/Hash.pm'});
 
         require Digest::MD5;
 
@@ -541,10 +523,6 @@ foreach my $file ($desk_obj->get_desktop_files) {
         eval {
 
             state $x = do {
-
-                delete($INC{'Exporter.pm'}) if !defined($INC{'Exporter.pm'});
-                delete($INC{'Carp.pm'})     if !defined($INC{'Carp.pm'});
-
                 require Encode;
                 require File::DesktopEntry;
             };
