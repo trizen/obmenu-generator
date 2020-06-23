@@ -457,7 +457,7 @@ if ($with_icons) {
             dbmclose(%cache_db);
             remove_database($cache_db);
 
-            dbmopen(my %cache_db, $cache_db, 0777)
+            dbmopen(%cache_db, $cache_db, 0777)
               or die "Can't create database <<$cache_db>>: $!";
 
             $cache_db{__GTKRC_MTIME__} = $gtkrc_mtime;
