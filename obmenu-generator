@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 23 June 2020
+# Latest edit: 29 November 2020
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -469,18 +469,21 @@ if ($with_icons) {
     my %fast_cache;
 
     sub check_icon {
-        $fast_cache{$_[0] // return ''} //= ($cache_db{$_[0]} //= get_icon_path($_[0]));
+        $fast_cache{$_[0] // return undef} //= ($cache_db{$_[0]} //= get_icon_path($_[0]));
     }
 }
 
 sub begin_category {
-    $with_icons
-      ? <<"MENU_WITH_ICON"
-  <menu id="${\rand()}" icon="${\check_icon($_[1])}" label="$_[0]">
+    if ($with_icons and defined(my $icon_path = check_icon($_[1]))) {
+        <<"MENU_WITH_ICON";
+  <menu id="${\rand()}" icon="$icon_path" label="$_[0]">
 MENU_WITH_ICON
-      : <<"MENU";
+    }
+    else {
+        <<"MENU";
   <menu id="${\rand()}" label="$_[0]">
 MENU
+    }
 }
 
 my %categories;
@@ -575,13 +578,16 @@ ITEM
     }
     elsif (exists $schema->{item}) {
         my ($command, $label, $icon) = @{$schema->{item}};
-        $generated_menu .= $with_icons
-          ? <<"ITEM_WITH_ICON"
-    <item label="$label" icon="${\check_icon($icon)}"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
+        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+            $generated_menu .= <<"ITEM_WITH_ICON";
+    <item label="$label" icon="$icon_path"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
 ITEM_WITH_ICON
-          : <<"ITEM";
+        }
+        else {
+            $generated_menu .= <<"ITEM";
     <item label="$label"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
 ITEM
+        }
     }
     elsif (exists $schema->{sep}) {
         $generated_menu .=
@@ -603,13 +609,16 @@ ITEM
     }
     elsif (exists $schema->{exit}) {
         my ($label, $icon) = @{$schema->{exit}};
-        $generated_menu .= $with_icons
-          ? <<"EXIT_WITH_ICON"
-    <item label="$label" icon="${\check_icon($icon)}"><action name="Exit"/></item>
+        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+            $generated_menu .= <<"EXIT_WITH_ICON";
+    <item label="$label" icon="$icon_path"><action name="Exit"/></item>
 EXIT_WITH_ICON
-          : <<"EXIT";
+        }
+        else {
+            $generated_menu .= <<"EXIT";
     <item label="$label"><action name="Exit"/></item>
 EXIT
+        }
     }
     elsif (exists $schema->{raw}) {
         $generated_menu .= qq[    $schema->{raw}\n];
@@ -620,21 +629,29 @@ EXIT
     }
     elsif (exists $schema->{pipe}) {
         my ($command, $label, $icon) = @{$schema->{pipe}};
-        $generated_menu .= $with_icons
-          ? <<"PIPE_WITH_ICON"
-    <menu id="${\rand()}" label="$label" execute="$command" icon="${\check_icon($icon)}"/>
+        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+            $generated_menu .= <<"PIPE_WITH_ICON";
+    <menu id="${\rand()}" label="$label" execute="$command" icon="$icon_path"/>
 PIPE_WITH_ICON
-          : <<"PIPE";
+        }
+        else {
+            $generated_menu .= <<"PIPE";
     <menu id="${\rand()}" label="$label" execute="$command"/>
 PIPE
+        }
     }
     elsif (exists $schema->{obgenmenu}) {
         my ($name, $icon) = ref($schema->{obgenmenu}) eq 'ARRAY' ? @{$schema->{obgenmenu}} : $schema->{obgenmenu};
-        $generated_menu .= ($with_icons ? <<"MENU_WITH_ICON" : <<"MENU");
-  <menu id="${\rand()}" label="$name" icon="${\check_icon($icon)}">
+        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+            $generated_menu .= <<"MENU_WITH_ICON";
+  <menu id="${\rand()}" label="$name" icon="$icon_path">
 MENU_WITH_ICON
+        }
+        else {
+            $generated_menu .= <<"MENU";
   <menu id="${\rand()}" label="$name">
 MENU
+        }
 
         $generated_menu .= ($with_icons ? <<"ITEMS_WITH_ICONS" : <<"ITEMS");
     <item label="Menu Schema" icon="${\check_icon('text-x-generic')}"><action name="Execute"><command><![CDATA[$CONFIG{editor} $schema_file]]></command></action></item>
