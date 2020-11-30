@@ -474,7 +474,7 @@ if ($with_icons) {
 }
 
 sub begin_category {
-    if ($with_icons and defined(my $icon_path = check_icon($_[1]))) {
+    if ($with_icons and (my $icon_path = check_icon($_[1]))) {
         <<"MENU_WITH_ICON";
   <menu id="${\rand()}" icon="$icon_path" label="$_[0]">
 MENU_WITH_ICON
@@ -564,7 +564,7 @@ foreach my $schema (@$SCHEMA) {
              sort { $a->[0] cmp $b->[0] }
                map [lc($_) => $_],
              map {
-                 $with_icons
+                 ($with_icons and $_->{Icon})
                    ? <<"ITEM_WITH_ICON"
     <item label="$_->{Name}" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM_WITH_ICON
@@ -578,7 +578,7 @@ ITEM
     }
     elsif (exists $schema->{item}) {
         my ($command, $label, $icon) = @{$schema->{item}};
-        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+        if ($with_icons and (my $icon_path = check_icon($icon))) {
             $generated_menu .= <<"ITEM_WITH_ICON";
     <item label="$label" icon="$icon_path"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
 ITEM_WITH_ICON
@@ -609,7 +609,7 @@ ITEM
     }
     elsif (exists $schema->{exit}) {
         my ($label, $icon) = @{$schema->{exit}};
-        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+        if ($with_icons and (my $icon_path = check_icon($icon))) {
             $generated_menu .= <<"EXIT_WITH_ICON";
     <item label="$label" icon="$icon_path"><action name="Exit"/></item>
 EXIT_WITH_ICON
@@ -629,7 +629,7 @@ EXIT
     }
     elsif (exists $schema->{pipe}) {
         my ($command, $label, $icon) = @{$schema->{pipe}};
-        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+        if ($with_icons and (my $icon_path = check_icon($icon))) {
             $generated_menu .= <<"PIPE_WITH_ICON";
     <menu id="${\rand()}" label="$label" execute="$command" icon="$icon_path"/>
 PIPE_WITH_ICON
@@ -642,7 +642,7 @@ PIPE
     }
     elsif (exists $schema->{obgenmenu}) {
         my ($name, $icon) = ref($schema->{obgenmenu}) eq 'ARRAY' ? @{$schema->{obgenmenu}} : $schema->{obgenmenu};
-        if ($with_icons and defined(my $icon_path = check_icon($icon))) {
+        if ($with_icons and (my $icon_path = check_icon($icon))) {
             $generated_menu .= <<"MENU_WITH_ICON";
   <menu id="${\rand()}" label="$name" icon="$icon_path">
 MENU_WITH_ICON
