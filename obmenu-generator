@@ -513,8 +513,8 @@ foreach my $file ($desk_obj->get_desktop_files) {
 
 #<<<
         %info = (
-            Name => $entry->{Name},
-            Exec => $entry->{Exec},
+            Name => $entry->{Name} // next,
+            Exec => $entry->{Exec} // next,
 
             (
              $with_icons
