@@ -347,9 +347,9 @@ if ($pipe or $static) {
           or die "Can't open file '${menufile}' for write: $!";
         print $fh <<"PIPE_MENU_HEADER";
 <?xml version="1.0" encoding="utf-8"?>
-<openbox_menu xmlns="http://openbox.org/"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://openbox.org/">
+<openbox_menu xmlns="https://openbox.org/"
+ xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://openbox.org/">
     <menu id="$menu_id" label="$pkgname" execute="$exec_name" />
 </openbox_menu>
 PIPE_MENU_HEADER
@@ -366,9 +366,9 @@ EOT
 my $generated_menu = $static
   ? <<"STATIC_MENU_HEADER"
 <?xml version="1.0" encoding="utf-8"?>
-<openbox_menu xmlns="http://openbox.org/"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://openbox.org/">
+<openbox_menu xmlns="https://openbox.org/"
+ xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://openbox.org/">
   <menu id="$menu_id" label="$menu_label_text">
 STATIC_MENU_HEADER
   : "<openbox_pipe_menu>\n";
