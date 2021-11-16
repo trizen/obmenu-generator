@@ -290,7 +290,7 @@ require $schema_file;
 require $config_file if $reload_config;
 
 # Remove invalid user-defined keys
-my @valid_keys = grep exists $CONFIG{$_}, keys %$CONFIG;
+my @valid_keys = grep { exists $CONFIG{$_} } keys %$CONFIG;
 @CONFIG{@valid_keys} = @{$CONFIG}{@valid_keys};
 
 if ($CONFIG{VERSION} != $version) {
@@ -563,20 +563,18 @@ foreach my $schema (@$SCHEMA) {
         exists($categories{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
         $generated_menu .= begin_category($schema->{cat}[1], ($with_icons ? $schema->{cat}[2] : ())) . join(
             q{},
-            (
-             map $_->[1],
-             sort { $a->[0] cmp $b->[0] }
-               map [lc($_) => $_],
-             map {
-                 ($with_icons and $_->{Icon})
-                   ? <<"ITEM_WITH_ICON"
+            map    { $_->[1] }
+              sort { $a->[0] cmp $b->[0] }
+              map  { [lc($_), $_] }
+              map {
+                ($with_icons and $_->{Icon})
+                  ? <<"ITEM_WITH_ICON"
     <item label="$_->{Name}" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM_WITH_ICON
-                   : <<"ITEM";
+                  : <<"ITEM";
     <item label="$_->{Name}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
 ITEM
-             } @{$categories{$category}}
-            )
+              } @{$categories{$category}}
           )
           . qq[  </menu>\n];
     }
