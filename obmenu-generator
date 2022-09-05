@@ -32,6 +32,7 @@ use 5.014;
 #use strict;
 #use warnings;
 
+use DB_File;
 use Linux::DesktopFiles;
 
 my $pkgname = 'obmenu-generator';
