@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2010-2021 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
+# Copyright (C) 2010-2022 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 22 August 2021
+# Latest edit: 06 September 2022
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -35,7 +35,7 @@ use 5.014;
 use Linux::DesktopFiles;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.90';
+my $version = '0.91';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -258,7 +258,7 @@ my %CONFIG = (
     gtk_version      => 3,
 
     VERSION => $version,
-             );
+);
 
 sub dump_configuration {
     require Data::Dump;
@@ -314,7 +314,7 @@ my $desk_obj = Linux::DesktopFiles->new(
 
     terminal              => $CONFIG{terminal},
     case_insensitive_cats => 1,
-                                       );
+);
 
 if ($pipe or $static) {
     my $menu_backup = $menufile . '.bak';
