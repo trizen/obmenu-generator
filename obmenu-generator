@@ -437,7 +437,7 @@ if (!$db_clean and ((-M $config_file) < (-M $cache_db) or (-M _) > (-M $schema_f
     $db_clean = 1;
 }
 
-eval { require GDBM_File };
+eval { require GDBM_File } // eval { require DB_File };
 
 dbmopen(my %cache_db, $cache_db, 0777)
   or die "Can't create/access database <<$cache_db>>: $!";
