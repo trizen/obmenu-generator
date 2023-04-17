@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2010-2022 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
+# Copyright (C) 2010-2023 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Latest edit: 06 September 2022
+# Edited: 17 April 2023
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -298,8 +298,19 @@ if ($CONFIG{VERSION} != $version) {
     dump_configuration();
 }
 
+#<<<
+my @desktop_files_paths = do {
+    my %seen;
+    grep { !$seen{$_}++ } (
+        ($ENV{XDG_DATA_DIRS} ? split(/:/, $ENV{XDG_DATA_DIRS}) : ()),
+        @{$CONFIG{'Linux::DesktopFiles'}{desktop_files_paths}},
+    );
+};
+#>>>
+
 my $desk_obj = Linux::DesktopFiles->new(
     %{$CONFIG{'Linux::DesktopFiles'}},
+    desktop_files_paths => \@desktop_files_paths,
 
     categories => [map { exists($_->{cat}) ? $_->{cat}[0] : () } @$SCHEMA],
 
