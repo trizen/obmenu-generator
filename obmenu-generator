@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Edited: 17 April 2023
+# Edited: 29 August 2023
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -35,7 +35,7 @@ use 5.014;
 use Linux::DesktopFiles;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.91';
+my $version = '0.92';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -582,7 +582,7 @@ foreach my $schema (@$SCHEMA) {
         exists($categories{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
         $generated_menu .= begin_category($schema->{cat}[1], ($with_icons ? $schema->{cat}[2] : ())) . join(
             q{},
-            map    { $_->[1] }
+            map { $_->[1] }
               sort { $a->[0] cmp $b->[0] }
               map  { [lc($_), $_] }
               map {
