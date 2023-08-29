@@ -48,17 +48,19 @@ my $home_dir =
   || (getpwuid($<))[7]
   || `echo -n ~`;
 
-my $xdg_config_home = "$home_dir/.config";
+my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || "$home_dir/.config";
+my $xdg_cache_home  = $ENV{XDG_CACHE_HOME}  || "$home_dir/.cache";
 
 my $menu_id         = "root-menu";
 my $menu_label_text = "Applications";
 my $config_dir      = "$xdg_config_home/$pkgname";
+my $cache_dir       = "$xdg_cache_home/$pkgname";
 my $schema_file     = "$config_dir/schema.pl";
 my $config_file     = "$config_dir/config.pl";
 my $openbox_conf    = "$xdg_config_home/openbox";
 my $menufile        = "$openbox_conf/menu.xml";
-my $cache_db        = "$config_dir/cache.db";
-my $icons_dir       = "$config_dir/icons";
+my $cache_db        = "$cache_dir/cache.db";
+my $icons_dir       = "$cache_dir/icons";
 
 sub usage {
     print <<"HELP";
@@ -200,6 +202,12 @@ if (not -d $config_dir) {
     require File::Path;
     File::Path::make_path($config_dir)
       or die "$0: can't create configuration directory `$config_dir': $!\n";
+}
+
+if (not -d $cache_dir) {
+    require File::Path;
+    File::Path::make_path($cache_dir)
+      or die "$0: can't create cache directory `$cache_dir': $!\n";
 }
 
 if ($with_icons and not -d $icons_dir) {
