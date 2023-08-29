@@ -322,7 +322,7 @@ my $desk_obj = Linux::DesktopFiles->new(
 
     categories => [map { exists($_->{cat}) ? $_->{cat}[0] : () } @$SCHEMA],
 
-    keys_to_keep => ['Name', 'Exec',
+    keys_to_keep => ['Name', 'Exec', 'Path',
                      ($with_icons ? 'Icon' : ()),
                      (
                       ref($CONFIG{'Linux::DesktopFiles'}{skip_entry}) eq 'ARRAY'
@@ -534,6 +534,7 @@ foreach my $file ($desk_obj->get_desktop_files) {
         %info = (
             Name => $entry->{Name} // next,
             Exec => $entry->{Exec} // next,
+            Path => $entry->{Path} // undef,
 
             (
              $with_icons
@@ -586,12 +587,20 @@ foreach my $schema (@$SCHEMA) {
               sort { $a->[0] cmp $b->[0] }
               map  { [lc($_), $_] }
               map {
+
+                my $exec = $_->{Exec};
+
+                if ($_->{Path}) {
+                    $exec =~ s{\\}{\\\\}g;
+                    $exec = "perl -e \"chdir(qq[\Q$_->{Path}\E]); exec(qq[\Q$exec\E])\"";
+                }
+
                 ($with_icons and $_->{Icon})
                   ? <<"ITEM_WITH_ICON"
-    <item label="$_->{Name}" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
+    <item label="$_->{Name}" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$exec]]></command></action></item>
 ITEM_WITH_ICON
                   : <<"ITEM";
-    <item label="$_->{Name}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
+    <item label="$_->{Name}"><action name="Execute"><command><![CDATA[$exec]]></command></action></item>
 ITEM
               } @{$categories{$category}}
           )
