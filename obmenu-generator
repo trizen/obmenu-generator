@@ -591,8 +591,11 @@ foreach my $schema (@$SCHEMA) {
                 my $exec = $_->{Exec};
 
                 if ($_->{Path}) {
+                    my $path = $_->{Path};
                     $exec =~ s{\\}{\\\\}g;
-                    $exec = "perl -e \"chdir(qq[\Q$_->{Path}\E]); exec(qq[\Q$exec\E])\"";
+                    $path =~ s{([\[\]])}{\\$1}g;
+                    $exec =~ s{([\[\]])}{\\$1}g;
+                    $exec = "perl -e 'chdir(q[$path]); exec(q[$exec])'";
                 }
 
                 ($with_icons and $_->{Icon})
