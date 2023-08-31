@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Edited: 31 August 2023
+# Edited: 01 September 2023
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -35,7 +35,7 @@ use 5.014;
 use Linux::DesktopFiles;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.92';
+my $version = '0.93';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -552,7 +552,7 @@ foreach my $file ($desk_obj->get_desktop_files) {
             require Encode;
             my $path = Encode::decode_utf8($info{Path});
             my $exec = Encode::decode_utf8($info{Exec});
-            $exec = "perl -e 'chdir(\$ARGV[0]) && exec(\$ARGV[1])' \Q$path\E \Q$exec\E";
+            $exec = "$^X -e 'chdir(\$ARGV[0]) && exec(\$ARGV[1])' \Q$path\E \Q$exec\E";
             $info{Exec} = Encode::encode_utf8($exec);
         }
 
