@@ -5,7 +5,8 @@
 =for comment
 
     item:      add an item inside the menu               {item => ["command", "label", "icon"]},
-    cat:       add a category inside the menu             {cat => ["name", "label", "icon"]},
+    cat:       add a category with items                  {cat => ["name", "label", "icon"]},
+    subcats:   add a category with subcategories      {subcats => ["name", "label", "icon"]},
     sep:       horizontal line separator                  {sep => undef}, {sep => "label"},
     pipe:      a pipe menu entry                         {pipe => ["command", "label", "icon"]},
     file:      include the content of an XML file        {file => "/path/to/file.xml"},

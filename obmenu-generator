@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2010-2023 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
+# Copyright (C) 2010-2024 Daniel "Trizen" Șuteu <echo dHJpemVuQHByb3Rvbm1haWwuY29tCg== | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # Name: obmenu-generator
 # License: GPLv3
 # Created: 25 March 2011
-# Edited: 01 September 2023
+# Edited: 03 October 2024
 # https://github.com/trizen/obmenu-generator
 
 use 5.014;
@@ -35,7 +35,7 @@ use 5.014;
 use Linux::DesktopFiles;
 
 my $pkgname = 'obmenu-generator';
-my $version = '0.93';
+my $version = '0.94';
 
 our ($CONFIG, $SCHEMA);
 my $output_h = \*STDOUT;
@@ -122,6 +122,9 @@ my $config_help = <<"HELP";
     | icon_size           : Preferred size for icons. (default: 48)
     | generic_fallback    : Try to shorten icon name at '-' characters before looking at inherited themes. (default: 0)
     | force_icon_size     : Always get the icon scaled to the requested size. (default: 0)
+
+|| OTHER SETTINGS
+    | unique_items        : Don't include the same item into multiple categories / subcategories. (default: 0)
 
 || PATHS
     | desktop_files_paths   : Absolute paths which contain .desktop files.
@@ -263,6 +266,7 @@ my %CONFIG = (
     force_icon_size  => 0,
     generic_fallback => 0,
     locale_support   => 1,
+    unique_items     => 0,
     gtk_version      => 3,
 
     VERSION => $version,
@@ -320,7 +324,7 @@ my $desk_obj = Linux::DesktopFiles->new(
     %{$CONFIG{'Linux::DesktopFiles'}},
     desktop_files_paths => \@desktop_files_paths,
 
-    categories => [map { exists($_->{cat}) ? $_->{cat}[0] : () } @$SCHEMA],
+    categories => [map { exists($_->{cat}) ? $_->{cat}[0] : (exists($_->{subcats}) ? $_->{subcats}[0] : ()) } @$SCHEMA],
 
     keys_to_keep => ['Name', 'Exec', 'Path',
                      ($with_icons ? 'Icon' : ()),
@@ -496,20 +500,9 @@ if ($with_icons) {
     }
 }
 
-sub begin_category {
-    if ($with_icons and (my $icon_path = check_icon($_[1]))) {
-        <<"MENU_WITH_ICON";
-  <menu id="${\rand()}" icon="$icon_path" label="$_[0]">
-MENU_WITH_ICON
-    }
-    else {
-        <<"MENU";
-  <menu id="${\rand()}" label="$_[0]">
-MENU
-    }
-}
-
 my %categories;
+my %subcategories;
+
 foreach my $file ($desk_obj->get_desktop_files) {
 
     my %info = split("\0\1\0", (exists($cache_db{$file}) ? $cache_db{$file} : ''), -1);
@@ -530,7 +523,6 @@ foreach my $file ($desk_obj->get_desktop_files) {
             next;
         };
 
-#<<<
         %info = (
             Name => $entry->{Name} // next,
             Exec => $entry->{Exec} // next,
@@ -542,10 +534,10 @@ foreach my $file ($desk_obj->get_desktop_files) {
              : ()
             ),
 
-            __CATEGORIES__ => join(';', @{$entry->{Categories}}),
-            __MTIME__      => $mtime,
+            __CATEGORIES__    => join(';', @{$entry->{Categories}}),
+            __SUBCATEGORIES__ => join(':', map { join(';', $_, @{$entry->{SubCategories}{$_}}) } keys %{$entry->{SubCategories}}),
+            __MTIME__         => $mtime,
         );
-#>>>
 
         # Support for the Path key
         if ($info{Path} ne '') {
@@ -585,40 +577,115 @@ foreach my $file ($desk_obj->get_desktop_files) {
     foreach my $category (split(/;/, $info{__CATEGORIES__})) {
         push @{$categories{$category}}, \%info;
     }
+
+    foreach my $entry (split(/:/, $info{__SUBCATEGORIES__})) {
+        my ($subcategory, @cats) = split(/;/, $entry);
+        foreach my $category (@cats) {
+            push @{$subcategories{$subcategory}{$category}}, \%info;
+        }
+        if (!@cats) {
+            push @{$subcategories{$subcategory}{__EXTRA__}}, \%info;
+        }
+    }
+}
+
+sub create_item {
+    my ($command, $label, $icon_path) = @_;
+
+    if ($with_icons and $icon_path) {
+        return <<"ITEM_WITH_ICON";
+    <item label="$label" icon="$icon_path"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
+ITEM_WITH_ICON
+    }
+
+    return <<"ITEM";
+    <item label="$label"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
+ITEM
+}
+
+sub begin_category {
+    my ($name, $icon) = @_;
+
+    if ($with_icons and (my $icon_path = check_icon($icon))) {
+        return <<"MENU_WITH_ICON";
+  <menu id="${\rand()}" icon="$icon_path" label="$name">
+MENU_WITH_ICON
+    }
+
+    return <<"MENU";
+  <menu id="${\rand()}" label="$name">
+MENU
+}
+
+sub end_category {
+    qq[  </menu>\n];
+}
+
+sub sort_items {
+    map  { $_->[1] }
+    sort { $a->[0] cmp $b->[0] }
+    map  { [lc($_->{Name}), $_] } @_;
+}
+
+{
+    my %SEEN_ITEM;
+
+    sub create_items {
+        my @items = @{$_[0]};
+
+        if ($CONFIG{unique_items}) {
+            @items = grep { !$SEEN_ITEM{$_->{Name}}++ } @items;
+        }
+
+        @items || return '';
+        join('', map { create_item($_->{Exec}, $_->{Name}, $_->{Icon}) } sort_items(@items));
+    }
+}
+
+sub create_category {
+    my ($name, $icon, $items) = @_;
+    my $items_xml = create_items($items);
+
+    if ($items_xml eq '') {
+        return '';
+    }
+
+    begin_category($name, $with_icons ? $icon : ()) . $items_xml . end_category();
 }
 
 foreach my $schema (@$SCHEMA) {
     if (exists $schema->{cat}) {
-        exists($categories{my $category = lc($schema->{cat}[0]) =~ tr/_a-z0-9/_/cr}) || next;
-        $generated_menu .= begin_category($schema->{cat}[1], ($with_icons ? $schema->{cat}[2] : ())) . join(
-            q{},
-            map { $_->[1] }
-              sort { $a->[0] cmp $b->[0] }
-              map  { [lc($_), $_] }
-              map {
-                ($with_icons and $_->{Icon})
-                  ? <<"ITEM_WITH_ICON"
-    <item label="$_->{Name}" icon="$_->{Icon}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
-ITEM_WITH_ICON
-                  : <<"ITEM";
-    <item label="$_->{Name}"><action name="Execute"><command><![CDATA[$_->{Exec}]]></command></action></item>
-ITEM
-              } @{$categories{$category}}
-          )
-          . qq[  </menu>\n];
+        my ($category, $name, $icon) = @{$schema->{cat}};
+        my $items = $categories{lc($category) =~ tr/_a-z0-9/_/cr} || next;
+        $generated_menu .= create_category($name, $icon, $items);
+    }
+    elsif (exists $schema->{subcats}) {
+        my ($category, $name, $icon) = @{$schema->{subcats}};
+        my $subcats = $subcategories{lc($category) =~ tr/_a-z0-9/_/cr} || next;
+
+        my $subcategories_xml = '';
+
+        if (exists $subcats->{__EXTRA__}) {
+            $subcategories_xml .= create_items($subcats->{__EXTRA__});
+        }
+
+        $subcategories_xml .= join(
+            '',
+            map {
+                my $category_name = $_ =~ s{([[:lower:]])([[:upper:]])}{$1 $2}gr;
+                my $category_icon = $subcats->{$_}[rand(@{$subcats->{$_}})]{Icon};
+                create_category($category_name, $category_icon, $subcats->{$_})
+            } sort { (scalar(@{$subcats->{$b}}) <=> scalar(@{$subcats->{$a}})) || ($a cmp $b) }
+              grep { $_ ne '__EXTRA__' } keys %$subcats
+        );
+
+        if ($subcategories_xml ne '') {
+            $generated_menu .= begin_category($name, $icon) . $subcategories_xml . end_category();
+        }
     }
     elsif (exists $schema->{item}) {
         my ($command, $label, $icon) = @{$schema->{item}};
-        if ($with_icons and (my $icon_path = check_icon($icon))) {
-            $generated_menu .= <<"ITEM_WITH_ICON";
-    <item label="$label" icon="$icon_path"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
-ITEM_WITH_ICON
-        }
-        else {
-            $generated_menu .= <<"ITEM";
-    <item label="$label"><action name="Execute"><command><![CDATA[$command]]></command></action></item>
-ITEM
-        }
+        $generated_menu .= create_item($command, $label, check_icon($icon));
     }
     elsif (exists $schema->{sep}) {
         $generated_menu .=
