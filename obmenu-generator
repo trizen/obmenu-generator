@@ -314,7 +314,7 @@ if ($CONFIG{VERSION} != $version) {
 my @desktop_files_paths = do {
     my %seen;
     grep { !$seen{$_}++ } (
-        ($ENV{XDG_DATA_DIRS} ? split(/:/, $ENV{XDG_DATA_DIRS}) : ()),
+        (map { $_ . '/applications' } ($ENV{XDG_DATA_DIRS} ? split(/:/, $ENV{XDG_DATA_DIRS}) : ())),
         @{$CONFIG{'Linux::DesktopFiles'}{desktop_files_paths}},
     );
 };
